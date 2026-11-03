@@ -1,0 +1,169 @@
+{{ define "body_classes" }}page-exercise{{ end }}
+
+{{ define "main" }}
+{{- $exerciseConfig := site.Params.services.exercise | default dict -}}
+{{- $mapboxApiOrigin := default "https://api.mapbox.com" (index $exerciseConfig "mapboxapiorigin") -}}
+{{- $mapboxEventsOrigin := default "https://events.mapbox.com" (index $exerciseConfig "mapboxeventsorigin") -}}
+{{- $mapboxCssUrl := default "https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" (index $exerciseConfig "mapboxcssurl") -}}
+{{- $mapboxJsUrl := default "https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js" (index $exerciseConfig "mapboxjsurl") -}}
+{{- $mapboxToken := default "" (index $exerciseConfig "mapboxtoken") -}}
+{{- $mapboxLightStyle := default "mapbox://styles/mapbox/streets-v12" (index $exerciseConfig "mapboxlightstyle") -}}
+{{- $mapboxDarkStyle := default "mapbox://styles/mapbox/dark-v11" (index $exerciseConfig "mapboxdarkstyle") -}}
+{{- $mapCenter := default (slice 0.0 0.0) (index $exerciseConfig "mapcenter") -}}
+{{- $posterFilePrefix := default "JingzheExercise" (index $exerciseConfig "posterfileprefix") -}}
+{{- $exerciseContract := hugo.Data.jingzhe.exercise -}}
+{{- $sportContract := index $exerciseContract "sports" -}}
+<link rel="dns-prefetch" href="{{ $mapboxApiOrigin }}">
+<link rel="dns-prefetch" href="{{ $mapboxEventsOrigin }}">
+
+{{- /* ============================================================
+     板块 1：读取处理后数据并组装页面轻量契约
+============================================================ */ -}}
+
+{{- /* 1. 读取并清洗 JSON 数据 */ -}}
+{{ $rawActivities := resources.Get "data/exercise/activities.json" | unmarshal }}
+
+{{ $monthlyInsightsRaw := resources.Get "data/exercise/monthly-insights.json" }}
+{{ $monthlyInsights := dict }}
+{{ if $monthlyInsightsRaw }}
+  {{ $monthlyInsights = $monthlyInsightsRaw | unmarshal }}
+{{ end }}
+
+{{ $landmarkRouteLibraryRaw := resources.Get "data/exercise/landmark-routes.json" }}
+{{ $landmarkRouteLibrary := slice }}
+{{ if $landmarkRouteLibraryRaw }}
+  {{ $landmarkRouteLibrary = $landmarkRouteLibraryRaw | unmarshal }}
+{{ end }}
+
+{{ $themeMap := dict }}
+{{ range $type, $values := $sportContract }}
+  {{ $themeMap = merge $themeMap (dict $type (dict "color" (index $values "color"))) }}
+{{ end }}
+{{ $defaultTheme := dict "color" (index $exerciseContract "fallbackColor") }}
+{{ $foodIconKeys := slice }}
+{{ range (index $exerciseContract "foods") }}
+  {{ $foodIconKeys = $foodIconKeys | append (index . "key") }}
+{{ end }}
+
+{{- /* 2. 排序并生成不含同步身份的浏览器数据 */ -}}
+{{ $sortedActivities := sort $rawActivities "start_date_local" "desc" }}
+
+{{ $years := slice }}
+{{ $lightweightRuns := slice }}
+
+{{ range $sortedActivities }}
+  {{ $y := substr .start_date_local 0 4 }}
+  {{ $m := substr .start_date_local 5 2 }}
+  {{ $years = $years | append $y }}
+
+  {{ $runData := dict "run_id" .run_id "display_name" .display_name "sport_display_name" .sport_display_name "card_achievement" .card_achievement "calendar_achievements" .calendar_achievements "energy_title" .energy_title "food_key" (default "" .food_key) "distance_title" (default "" .distance_title) "distance_title_key" (default "" .distance_title_key) "type" .type "distance" .distance "total_elevation_gain" .total_elevation_gain "calories" .calories "moving_time" .moving_time "pace_num" .pace_num "pace_unit" .pace_unit "average_heartrate" .average_heartrate "start_date_local" .start_date_local "summary_polyline" (default "" .summary_polyline) "route_status" .route_status "is_indoor" (default false .is_indoor) }}
+  {{ $lightweightRuns = $lightweightRuns | append $runData }}
+{{ end }}
+{{ $years = sort ($years | uniq) "value" "desc" }}
+
+
+{{- /* ============================================================
+     板块 2：全景视图渲染层 (HTML 骨架)
+============================================================ */ -}}
+{{ partial "exercise-food-icons.html" . }}
+<div class="exercise-container">
+  <div class="pagetitle">
+    {{ .Params.intro }}
+    <small class="exercise-privacy-note">(隐私保护：部分轨迹借杭州景点路线呈现)</small>
+  </div>
+
+  <div class="bento-hero" id="bento-hero">
+    <div class="bento-map-placeholder">
+      <div id="map-wrapper" class="page-map bento-card-map">
+        <div id="mapbox-container" style="width: 100%; height: 100%;"></div>
+        <div id="map-stats-panel" class="runDetailCard" style="display: none;"></div>
+      </div>
+    </div>
+    <div class="bento-calendar-board" id="calendar-board-container"></div>
+  </div>  
+      <div class="cardList" id="run-list">
+        {{ range $index, $run := $sortedActivities }}
+          {{ $y := substr .start_date_local 0 4 }}
+          {{ $m := substr .start_date_local 5 2 }}
+          
+          {{ $theme := default $defaultTheme (index $themeMap .type) }}
+          {{ $achievement := .card_achievement }}
+          {{ $hasAchieve := ne $achievement nil }}
+          {{ $isGold := and $hasAchieve (eq (index $achievement "level") "year") }}
+          {{ $energyTitle := default "" $run.energy_title }}
+          {{ $foodKey := default "" $run.food_key }}
+          {{ $hasFoodIcon := and $energyTitle (in $foodIconKeys $foodKey) }}
+          {{ $runTime := time $run.start_date_local }}
+          {{ $runId := printf "%.0f" .run_id }}
+          
+          <div class="runCard item-year-{{ $y }} item-month-{{ $m }}" 
+               data-run-id="{{ $runId }}"{{ if ne $y (index $years 0) }}
+               style="display: none;"{{ end }}>
+            <button class="runCardAction"
+                    type="button"
+                    data-exercise-action="fly-to-run"
+                    data-run-id="{{ $runId }}"
+                    aria-label="查看 {{ $runTime.Format "2006年01月02日 15:04" }} {{ $run.display_name }}的运动详情与轨迹"></button>
+            <div class="cardContent">
+              {{ if $hasFoodIcon }}
+                <button class="foodIconTrigger" type="button" aria-label="{{ $energyTitle }}" data-energy-title="{{ $energyTitle }}">
+                  <svg class="foodIcon" aria-hidden="true" focusable="false"><use href="#food-icon-{{ $foodKey }}"></use></svg>
+                </button>
+              {{ end }}
+              <div class="leftInfo">
+                <div class="runName {{ if $isGold }}is-gold-text{{ else if $hasAchieve }}is-silver-text{{ end }}">{{ $run.display_name }}</div>
+                <div class="runDistance" style="color: {{ $theme.color }}">
+                  {{ if gt $run.distance 0 }}{{ printf "%.2f" $run.distance }}<span class="distUnit">km</span>{{ else }}{{ $run.moving_time }}{{ end }}
+                </div>
+              </div>
+              <div class="rightInfo">
+                <time class="runDate" datetime="{{ $runTime.Format "2006-01-02T15:04:05Z07:00" }}">{{ $runTime.Format "01-02 15:04" }}</time>
+              </div>
+            </div>
+            </div>
+        {{ end }}
+        <div class="runListEmpty" id="run-list-empty" hidden>本月暂无运动</div>
+      </div>
+</div>
+
+{{- /* ============================================================
+     板块 3：客户端脚本配置与依赖注入
+============================================================ */ -}}
+
+<link rel="preconnect" href="{{ $mapboxApiOrigin }}" crossorigin>
+<link rel="preconnect" href="{{ $mapboxEventsOrigin }}" crossorigin>
+<link href="{{ $mapboxCssUrl }}" rel="stylesheet" />
+<script defer src="{{ $mapboxJsUrl }}"></script>
+
+<script>
+  window.KoobaiRun = {
+    data: {{ $lightweightRuns | jsonify | safeJS }},
+    monthlyInsights: {{ $monthlyInsights | jsonify | safeJS }},
+    landmarkRoutes: {{ $landmarkRouteLibrary | jsonify | safeJS }},
+    availableYears: {{ $years | jsonify | safeJS }},
+    contract: {{ $exerciseContract | jsonify | safeJS }},
+    config: {
+      MAPBOX_TOKEN: {{ $mapboxToken | jsonify | safeJS }},
+      MAP_STYLE_LIGHT: {{ $mapboxLightStyle | jsonify | safeJS }},
+      MAP_STYLE_DARK: {{ $mapboxDarkStyle | jsonify | safeJS }},
+      MAP_CENTER: {{ $mapCenter | jsonify | safeJS }},
+      POSTER_FILE_PREFIX: {{ $posterFilePrefix | jsonify | safeJS }}
+    },
+    ui: null, map: null
+  };
+</script>
+
+<script defer src="/js/html-to-image.min.js"></script>
+{{ partial "jingzhe/bundle-script.html" (dict
+  "paths" (slice
+    "js/exercise/model.js"
+    "js/exercise/routes.js"
+    "js/exercise/poster.js"
+    "js/exercise/ui.js"
+    "js/exercise/mapbox-adapter.js"
+    "js/exercise/controller.js"
+  )
+  "targetPath" "js/exercise.js"
+  "defer" true
+) }}
+{{ end }}

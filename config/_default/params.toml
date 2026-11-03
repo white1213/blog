@@ -20,10 +20,10 @@ RSSNoContent = false
   manifestPath = "/manifest.webmanifest"
 
 [repository]
-  owner = ""
-  name = ""
+  owner = "white1213"
+  name = "blog"
   branch = "main"
-  url = ""
+  url = "https://github.com/white1213/blog"
 
 [assets]
   fontRegularUrl = ""
@@ -33,8 +33,8 @@ RSSNoContent = false
   core = true
   publisher = false
   social = false
-  movies = false
-  exercise = false
+  movies = true
+  exercise = true
   aiCoach = false
   externalShop = false
 
