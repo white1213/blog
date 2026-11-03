@@ -3,6 +3,9 @@ name: Deploy Hugo site to GitHub Pages
 on:
   push:
     branches: ["main"]
+    # 只有原始运动事实变化的提交跳过部署，等处理产物出来再构建。
+    paths-ignore:
+      - 'data/exercise/activities.json'
   workflow_dispatch:
 
 permissions:

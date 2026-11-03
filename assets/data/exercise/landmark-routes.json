@@ -1,1 +1,85 @@
-[]
+[
+ {
+  "key": "track-400m",
+  "name": "标准跑道",
+  "unit": "圈",
+  "kind": "distance",
+  "reference_km": 0.4,
+  "min_km": 0.4,
+  "max_km": 5,
+  "max_count": 13,
+  "preferred_groups": [
+   "run",
+   "walk"
+  ],
+  "path_type": "loop",
+  "distance_km": 0.4,
+  "source": "通用田径场周长 400 米",
+  "geometry": "oyurF{fmeU}ANuAl@iAhAy@`Bc@nBKxBJxBb@nBx@`BhAhAtAl@|AN|AOtAm@hAiAx@aBb@oBJyBKyBc@oBy@aBiAiAuAm@}AO"
+ },
+ {
+  "key": "football-pitch",
+  "name": "足球场",
+  "unit": "圈",
+  "kind": "distance",
+  "reference_km": 0.35,
+  "min_km": 5,
+  "max_km": 15,
+  "max_count": 43,
+  "preferred_groups": [
+   "run",
+   "walk"
+  ],
+  "path_type": "loop",
+  "distance_km": 0.35,
+  "source": "标准 11 人制球场外圈约 350 米",
+  "geometry": "_yz}DocmdVqAJkAd@_Ax@q@jA_@vAI~AH~A^vAp@jA~@x@jAd@pAJpAKjAe@~@y@p@kA^wAH_BI_B_@wAq@kA_Ay@kAe@qAK"
+ },
+ {
+  "key": "river-loop-10km",
+  "name": "滨河骑行环线",
+  "unit": "圈",
+  "kind": "distance",
+  "reference_km": 10,
+  "min_km": 5,
+  "max_km": 100,
+  "max_count": 10,
+  "preferred_groups": [
+   "ride"
+  ],
+  "path_type": "loop",
+  "distance_km": 10,
+  "source": "城市滨河绿道常见环线长度",
+  "geometry": "ot`lCej}rTwo@rCgn@vLkk@nUag@n]sa@rd@a[pj@uSfo@sKjr@iC~s@hC~s@rKjr@tSfo@`[pj@ra@rd@`g@n]jk@nUfn@vLvo@rCvo@sCfn@wLjk@oU`g@o]ra@sd@`[qj@tSgo@rKkr@hC_t@iC_t@sKkr@uSgo@a[qj@sa@sd@ag@o]kk@oUgn@wLwo@sC"
+ },
+ {
+  "key": "hill-trail-5km",
+  "name": "山林步道环线",
+  "unit": "圈",
+  "kind": "distance",
+  "reference_km": 5,
+  "min_km": 3,
+  "max_km": 30,
+  "max_count": 6,
+  "preferred_groups": [
+   "hike",
+   "walk"
+  ],
+  "path_type": "loop",
+  "distance_km": 5,
+  "source": "城市郊野步道典型环线长度",
+  "geometry": "_vtbEcdmtUkZdBiYlHiWhNgTpSmPbX_Lr[_G`^uAh_@tAh_@~F`^~Kr[lPbXfTpShWhNhYlHjZdBjZeBhYmHhWiNfTqSlPcX~Ks[~Fa^tAi_@uAi_@_Ga^_Ls[mPcXgTqSiWiNiYmHkZeB"
+ },
+ {
+  "key": "residential-floor",
+  "name": "居民楼",
+  "unit": "层",
+  "kind": "elevation",
+  "reference_meters": 3,
+  "max_count": 60,
+  "path_type": "loop",
+  "distance_km": 0.05,
+  "source": "住宅楼层高约 3 米",
+  "geometry": "_jqhCokdwTUDOPEVDVNPTDTENQDWEWOQUE"
+ }
+]
