@@ -1,0 +1,60 @@
+{{ define "body_classes" }}page-playlist{{ end }}
+
+{{ define "main" }}
+<div class="pagetitle">
+  {{ .Description | default .Title }}
+</div>
+
+{{ $playlists := resources.Get "data/playlists.json" | transform.Unmarshal }}
+
+{{ if not $playlists }}
+<div class="pl-empty">
+  <p>还没有导入歌单。</p>
+  <p class="pl-empty-hint">把 QQ 音乐歌单链接发给我，或者运行 <code>python sync_playlists.py &lt;链接&gt;</code> 导入。</p>
+</div>
+{{ else }}
+{{ range $playlists }}
+<section class="pl-card">
+  <header class="pl-head">
+    <a class="pl-cover" href="{{ .source_url }}" target="_blank" rel="noopener" aria-label="在 QQ 音乐打开《{{ .name }}》">
+      {{ if .cover }}
+      <img src="{{ .cover | relURL }}" alt="《{{ .name }}》封面" loading="lazy" decoding="async">
+      {{ else }}
+      <span class="pl-cover-empty" aria-hidden="true">♪</span>
+      {{ end }}
+    </a>
+    <div class="pl-info">
+      <h2 class="pl-name"><a href="{{ .source_url }}" target="_blank" rel="noopener">{{ .name }}</a></h2>
+      <div class="pl-meta">
+        {{ if .creator }}<span class="pl-creator">@{{ .creator }}</span>{{ end }}
+        <span class="pl-count">{{ .song_count }} 首</span>
+      </div>
+      {{ if .desc }}<p class="pl-desc">{{ .desc }}</p>{{ end }}
+    </div>
+  </header>
+
+  <ol class="pl-songs">
+    {{ range $i, $song := .songs }}
+    <li class="pl-song{{ if ge $i 15 }} is-hidden{{ end }}">
+      <span class="pl-no">{{ add $i 1 }}</span>
+      <span class="pl-title">
+        {{ if $song.songmid }}
+        <a href="https://y.qq.com/n/ryqq/songDetail/{{ $song.songmid }}" target="_blank" rel="noopener">{{ $song.name }}</a>
+        {{ else }}{{ $song.name }}{{ end }}
+      </span>
+      <span class="pl-artist">{{ $song.singers }}</span>
+      <span class="pl-album">{{ $song.album }}</span>
+      <span class="pl-time">{{ $secs := int (mod (int $song.interval) 60) }}{{ $mins := int (div (int $song.interval) 60) }}{{ printf "%d:%02d" $mins $secs }}</span>
+    </li>
+    {{ end }}
+  </ol>
+
+  {{ if gt (len .songs) 20 }}
+  <button class="pl-more" type="button" data-total="{{ .song_count }}">展开全部 {{ .song_count }} 首</button>
+  {{ end }}
+</section>
+{{ end }}
+{{ end }}
+
+{{ partial "jingzhe/script.html" (dict "path" "js/pages/playlist.js" "defer" true) }}
+{{ end }}

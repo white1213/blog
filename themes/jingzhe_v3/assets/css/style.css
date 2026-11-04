@@ -8,6 +8,7 @@
 {{ if partial "jingzhe/feature-enabled.html" "movies" }}
 @import "movies.css";
 {{ end }}
+@import "playlist.css";
 @import "about.css";
 @import "list.css";
 @import "zouguo/index.css";
