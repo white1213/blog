@@ -46,7 +46,7 @@ GitHub Pages  →  white1213.github.io/blog/
 
 ---
 
-## 二、三条工作流
+## 二、四条工作流
 
 ### 1. deploy.yml —— 部署
 
@@ -80,6 +80,17 @@ GitHub Pages  →  white1213.github.io/blog/
 | 产出 | 运动页更新（趣味标题、月度统计、月报） |
 
 测试不过就不处理，避免坏数据上线。
+
+### 4. playlist-sync.yml —— 歌单同步
+
+| 项目 | 说明 |
+| --- | --- |
+| 触发 | 每天北京时间 **04:37**；也可手动（可填歌单链接） |
+| 步骤 | checkout → Python → `python -I sync_playlists.py` → 有变化才提交 → 触发 deploy |
+| 提交内容 | `assets/data/playlists.json`、`static/playlist-covers/*` |
+| 产出 | 已导入歌单里的新歌自动出现 |
+
+不带参数运行时，脚本会读取 `assets/data/playlists.json` 里已有的歌单 ID 全部刷新一遍。手动运行时可以填一个歌单链接来添加新歌单。
 
 ---
 
@@ -147,7 +158,7 @@ my-jingzhe/
 ├── process_activities.py       运动处理入口
 ├── monthly_coach.py            月报入口
 ├── tests/                      运动契约测试
-└── .github/workflows/          三条工作流
+└── .github/workflows/          四条工作流
 ```
 
 ---
@@ -205,15 +216,19 @@ date: 2026-11-05T20:00:00+08:00
 
 ### 加跑步数据
 
+**方式一：写作页（推荐）**
+
+打开 <https://white1213.github.io/blog/write/> → 切到「**记运动**」页签 → 填类型、开始时间、距离、时长（可选卡路里/心率）→ 点「记一笔」。1–2 分钟后运动页更新。
+
+**方式二：直接改文件**
+
 1. 编辑 `data/exercise/activities.json`（格式见下节）
 2. push —— 工作流会自动跑测试、处理、部署
 
 ### 加歌单
 
-```bash
-python -I sync_playlists.py "https://y.qq.com/n/ryqq/playlist/歌单ID"
-git add -A && git commit -m "导入歌单" && git push
-```
+- **新歌自动出现**：已导入的歌单每天 04:37 自动刷新，歌单里新增的歌会自动同步。
+- **添加新歌单**：GitHub 仓库 → Actions → **Playlist Sync** → Run workflow → 在 `playlist_url` 填歌单链接（也可以本地跑 `python -I sync_playlists.py "链接"` 后 push）。
 
 ---
 

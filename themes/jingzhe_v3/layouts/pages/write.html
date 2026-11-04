@@ -21,6 +21,7 @@
         <button class="wr-tab is-active" data-mode="post" type="button">写随笔</button>
         <button class="wr-tab" data-mode="laodao" type="button">发唠叨</button>
         <button class="wr-tab" data-mode="manage" type="button">管理</button>
+        <button class="wr-tab" data-mode="exercise" type="button">记运动</button>
       </div>
       <div class="wr-right">
         <span id="wr-user" class="wr-msg"></span>
@@ -60,7 +61,7 @@
       </div>
     </div>
 
-    <div class="wr-actions">
+    <div class="wr-actions" id="wr-actions-main">
       <button id="wr-publish" class="wr-btn wr-btn-primary" type="button">发布</button>
       <button id="wr-draft" class="wr-btn wr-btn-ghost" type="button">存草稿</button>
       <span id="wr-status" class="wr-msg"></span>
@@ -80,6 +81,54 @@
         <div id="wr-list-laodao" class="wr-list"></div>
       </div>
     </div>
+
+    <div id="wr-exercise" hidden>
+      <h3 class="wr-h2">记一笔运动</h3>
+      <p class="wr-hint">从 Keep 抄下数据填进来即可，提交后自动处理并上线（约 1–2 分钟）。</p>
+      <div class="wr-fields">
+        <div class="wr-grid2">
+          <div class="wr-field">
+            <label for="wr-ex-type">运动类型</label>
+            <select id="wr-ex-type" class="wr-input">
+              <option value="Run">跑步</option>
+              <option value="Treadmill">跑步机</option>
+              <option value="Ride">骑行</option>
+              <option value="Walk">步行</option>
+              <option value="Hike">徒步</option>
+              <option value="Swim">游泳</option>
+            </select>
+          </div>
+          <div class="wr-field">
+            <label for="wr-ex-date">开始时间</label>
+            <input id="wr-ex-date" type="datetime-local" class="wr-input">
+          </div>
+        </div>
+        <div class="wr-grid2">
+          <div class="wr-field">
+            <label for="wr-ex-dist">距离（公里）</label>
+            <input id="wr-ex-dist" type="number" step="0.01" min="0" class="wr-input" placeholder="3.0">
+          </div>
+          <div class="wr-field">
+            <label for="wr-ex-dur">时长（分:秒 或分钟）</label>
+            <input id="wr-ex-dur" class="wr-input" placeholder="30:00">
+          </div>
+        </div>
+        <div class="wr-grid2">
+          <div class="wr-field">
+            <label for="wr-ex-cal">卡路里（可选）</label>
+            <input id="wr-ex-cal" type="number" min="0" class="wr-input" placeholder="180">
+          </div>
+          <div class="wr-field">
+            <label for="wr-ex-hr">平均心率（可选）</label>
+            <input id="wr-ex-hr" type="number" min="0" class="wr-input" placeholder="150">
+          </div>
+        </div>
+      </div>
+      <div class="wr-actions">
+        <button id="wr-ex-publish" class="wr-btn wr-btn-primary" type="button">记一笔</button>
+        <span id="wr-ex-status" class="wr-msg"></span>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -90,6 +139,7 @@
 .wr-hint { color: var(--text-info-color); font-size: .82rem; line-height: 1.6; margin: 8px 0; }
 .wr-input, .wr-textarea { width: 100%; box-sizing: border-box; background: transparent; color: var(--text-content-color); border: 1px solid rgba(120,110,90,.28); border-radius: 8px; padding: 9px 11px; font: inherit; }
 .wr-input:focus, .wr-textarea:focus { outline: 2px solid var(--text-highlight-color); outline-offset: 1px; }
+select.wr-input { appearance: auto; background-color: var(--background-card-color); }
 .wr-row { display: flex; gap: 10px; align-items: center; margin-top: 10px; }
 .wr-btn { appearance: none; border-radius: 8px; padding: 8px 16px; font: inherit; cursor: pointer; border: 1px solid transparent; }
 .wr-btn-primary { background: var(--text-highlight-color); color: var(--background-body-color); }
@@ -242,15 +292,16 @@
     document.querySelectorAll('.wr-tab').forEach(function (b) {
       b.classList.toggle('is-active', b.dataset.mode === mode);
     });
-    var manage = mode === 'manage';
-    $('wr-post-fields').style.display = (!manage && mode === 'post') ? '' : 'none';
+    var isWriting = mode === 'post' || mode === 'laodao';
+    $('wr-post-fields').style.display = mode === 'post' ? '' : 'none';
     var area = document.querySelector('.wr-editor-area');
-    var actions = document.querySelector('.wr-actions');
-    if (area) area.style.display = manage ? 'none' : '';
-    if (actions) actions.style.display = manage ? 'none' : '';
-    $('wr-publish-hint').style.display = manage ? 'none' : '';
-    $('wr-manage').hidden = !manage;
-    if (manage) loadManage();
+    if (area) area.style.display = isWriting ? '' : 'none';
+    $('wr-actions-main').style.display = isWriting ? '' : 'none';
+    $('wr-publish-hint').style.display = isWriting ? '' : 'none';
+    $('wr-manage').hidden = mode !== 'manage';
+    $('wr-exercise').hidden = mode !== 'exercise';
+    if (mode === 'manage') loadManage();
+    if (mode === 'exercise') initExerciseForm();
   }
 
   function slugify(text) {
@@ -408,8 +459,67 @@
     }
   }
 
-  function showEditor() {
-    $('wr-login').hidden = true;
+  function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+  function initExerciseForm() {
+    var el = $('wr-ex-date');
+    if (!el.value) {
+      var d = new Date();
+      el.value = d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) + 'T' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+    }
+  }
+  function parseDuration(v) {
+    v = (v || '').trim();
+    if (!v) return 0;
+    var parts = v.split(':').map(function (s) { return Number(s); });
+    if (parts.some(function (n) { return isNaN(n); })) return 0;
+    if (parts.length === 1) return Math.round(parts[0] * 60);
+    if (parts.length === 2) return Math.round(parts[0] * 60 + parts[1]);
+    if (parts.length === 3) return Math.round(parts[0] * 3600 + parts[1] * 60 + parts[2]);
+    return 0;
+  }
+  async function submitExercise() {
+    var btn = $('wr-ex-publish'), st = $('wr-ex-status');
+    var type = $('wr-ex-type').value;
+    var dt = $('wr-ex-date').value;
+    var dist = Number($('wr-ex-dist').value);
+    var secs = parseDuration($('wr-ex-dur').value);
+    var calRaw = $('wr-ex-cal').value.trim();
+    var hrRaw = $('wr-ex-hr').value.trim();
+    if (!dt) { setStatus(st, '请选择开始时间', 'err'); return; }
+    if (!(dist > 0)) { setStatus(st, '距离要大于 0', 'err'); return; }
+    if (!secs) { setStatus(st, '时长格式：30:00 或 30（分钟）', 'err'); return; }
+    var started = (dt.length === 16 ? dt + ':00' : dt) + '+08:00';
+    var id = 'manual-' + dt.replace(/[-T:]/g, '');
+    btn.disabled = true;
+    setStatus(st, '提交中…');
+    try {
+      var path = 'data/exercise/activities.json';
+      var cur = await ghGet(path);
+      var store = cur ? JSON.parse(b64DecodeUtf8(cur.content)) : { schema_version: 1, sources: {} };
+      store.sources = store.sources || {};
+      store.sources.keep = store.sources.keep || [];
+      if (store.sources.keep.some(function (r) { return r.external_id === id; })) {
+        throw new Error('这个时间已经有一条记录了');
+      }
+      var rec = {
+        external_id: id, type: type, started_at: started,
+        duration_seconds: secs, distance_km: dist,
+        is_indoor: false, route_status: 'unavailable'
+      };
+      if (calRaw) rec.calories_kcal = Number(calRaw);
+      if (hrRaw) rec.average_heartrate_bpm = Number(hrRaw);
+      store.sources.keep.push(rec);
+      await ghPut(path, JSON.stringify(store, null, 2) + '\n', '添加运动记录 ' + dt.replace('T', ' '));
+      setStatus(st, '已提交，1–2 分钟后上线', 'ok');
+      $('wr-ex-dist').value = ''; $('wr-ex-dur').value = ''; $('wr-ex-cal').value = ''; $('wr-ex-hr').value = '';
+    } catch (e) {
+      setStatus(st, e.message, 'err');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function showEditor() {    $('wr-login').hidden = true;
     $('wr-editor').hidden = false;
     $('wr-user').textContent = '已连接 ' + OWNER + '/' + REPO;
   }
@@ -457,6 +567,7 @@
       $(id).addEventListener('input', saveDraftLocal);
     });
     $('wr-publish').addEventListener('click', publish);
+    $('wr-ex-publish').addEventListener('click', submitExercise);
     $('wr-draft').addEventListener('click', function () {
       saveDraftLocal(); setStatus($('wr-status'), '草稿已存在本机（未发布）', 'ok');
     });

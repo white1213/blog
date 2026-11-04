@@ -127,14 +127,19 @@ def load_existing():
 
 
 def main(argv):
-    if len(argv) < 2:
-        print(__doc__)
-        return 1
-
     playlists = load_existing()
     by_id = {str(p.get("id")): p for p in playlists}
 
-    for raw in argv[1:]:
+    targets = argv[1:]
+    if not targets:
+        # 不带参数:刷新已导入的全部歌单(供定时工作流使用)
+        targets = list(by_id.keys())
+        if not targets:
+            print(__doc__)
+            return 1
+        print("🔄 未指定歌单,刷新已有的 {} 个歌单".format(len(targets)))
+
+    for raw in targets:
         playlist_id = parse_playlist_id(raw)
         print("📥 正在抓取歌单 {} ...".format(playlist_id))
         cd = fetch_playlist(playlist_id)
