@@ -20,6 +20,7 @@
       <div class="wr-tabs">
         <button class="wr-tab is-active" data-mode="post" type="button">写随笔</button>
         <button class="wr-tab" data-mode="laodao" type="button">发唠叨</button>
+        <button class="wr-tab" data-mode="manage" type="button">管理</button>
       </div>
       <div class="wr-right">
         <span id="wr-user" class="wr-msg"></span>
@@ -64,7 +65,21 @@
       <button id="wr-draft" class="wr-btn wr-btn-ghost" type="button">存草稿</button>
       <span id="wr-status" class="wr-msg"></span>
     </div>
-    <p class="wr-hint">发布后会提交到 <code>{{ $repo.owner }}/{{ $repo.name }}</code>，约 1–2 分钟后自动上线。</p>
+    <p class="wr-hint" id="wr-publish-hint">发布后会提交到 <code>{{ $repo.owner }}/{{ $repo.name }}</code>，约 1–2 分钟后自动上线。</p>
+
+    <div id="wr-manage" hidden>
+      <h3 class="wr-h2">文章管理</h3>
+      <p class="wr-hint">删除后不可恢复（仓库里还能通过 Git 历史找回，但页面上没了）。</p>
+      <div id="wr-manage-status" class="wr-msg"></div>
+      <div class="wr-manage-group">
+        <div class="wr-manage-title">随笔 <span id="wr-count-posts" class="wr-count"></span></div>
+        <div id="wr-list-posts" class="wr-list"></div>
+      </div>
+      <div class="wr-manage-group">
+        <div class="wr-manage-title">唠叨 <span id="wr-count-laodao" class="wr-count"></span></div>
+        <div id="wr-list-laodao" class="wr-list"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -103,6 +118,17 @@
 .wr-msg { font-size: .8rem; color: var(--text-info-color); }
 .wr-msg.is-ok { color: #2f9e5b; }
 .wr-msg.is-err { color: #d9534f; }
+.wr-manage-group { margin-top: 18px; }
+.wr-manage-title { font-size: .85rem; color: var(--text-info-color); margin-bottom: 8px; }
+.wr-count { opacity: .7; }
+.wr-list { display: flex; flex-direction: column; gap: 6px; }
+.wr-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid rgba(120,110,90,.16); border-radius: 8px; }
+.wr-item-main { flex: 1; min-width: 0; }
+.wr-item-title { font-size: .9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wr-item-path { font-size: .72rem; color: var(--text-info-color); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wr-del { appearance: none; border: 1px solid rgba(217,83,79,.5); color: #d9534f; background: transparent; border-radius: 6px; padding: 4px 10px; font: inherit; font-size: .78rem; cursor: pointer; flex-shrink: 0; }
+.wr-del:hover { background: rgba(217,83,79,.1); }
+.wr-del:disabled { opacity: .5; cursor: default; }
 @media (max-width: 760px) {
   .wr-editor-area { grid-template-columns: 1fr; }
   .wr-grid2 { grid-template-columns: 1fr; }
@@ -193,7 +219,8 @@
   function saveDraftLocal() {
     try {
       localStorage.setItem(DRAFT_KEY, JSON.stringify({
-        mode: state.mode, title: $('wr-title').value, slug: $('wr-slug').value,
+        mode: state.mode === 'manage' ? 'post' : state.mode,
+        title: $('wr-title').value, slug: $('wr-slug').value,
         tags: $('wr-tags').value, desc: $('wr-desc').value, body: $('wr-body').value
       }));
     } catch (e) {}
@@ -205,7 +232,7 @@
       $('wr-title').value = d.title || ''; $('wr-slug').value = d.slug || '';
       $('wr-tags').value = d.tags || ''; $('wr-desc').value = d.desc || '';
       $('wr-body').value = d.body || '';
-      if (d.mode) setMode(d.mode);
+      if (d.mode && d.mode !== 'manage') setMode(d.mode);
       refreshPreview();
     } catch (e) {}
   }
@@ -215,7 +242,15 @@
     document.querySelectorAll('.wr-tab').forEach(function (b) {
       b.classList.toggle('is-active', b.dataset.mode === mode);
     });
-    $('wr-post-fields').style.display = mode === 'post' ? '' : 'none';
+    var manage = mode === 'manage';
+    $('wr-post-fields').style.display = (!manage && mode === 'post') ? '' : 'none';
+    var area = document.querySelector('.wr-editor-area');
+    var actions = document.querySelector('.wr-actions');
+    if (area) area.style.display = manage ? 'none' : '';
+    if (actions) actions.style.display = manage ? 'none' : '';
+    $('wr-publish-hint').style.display = manage ? 'none' : '';
+    $('wr-manage').hidden = !manage;
+    if (manage) loadManage();
   }
 
   function slugify(text) {
@@ -269,6 +304,110 @@
     }
   }
 
+  function b64DecodeUtf8(b64) {
+    var bin = atob(b64.replace(/\n/g, ''));
+    var bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new TextDecoder().decode(bytes);
+  }
+  function pathEncode(p) { return p.split('/').map(encodeURIComponent).join('/'); }
+
+  async function listDir(dir) {
+    var res = await fetch('https://api.github.com/repos/' + OWNER + '/' + REPO + '/contents/' +
+      pathEncode(dir) + '?ref=' + encodeURIComponent(BRANCH), { headers: headers() });
+    if (res.status === 404) return [];
+    if (!res.ok) throw new Error('读取目录失败：' + (await res.json()).message);
+    return await res.json();
+  }
+  async function listAll(dir) {
+    var items = await listDir(dir);
+    var files = [];
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i];
+      if (it.type === 'file' && /\.md$/.test(it.name) && it.name.charAt(0) !== '_') files.push(it);
+      else if (it.type === 'dir') files = files.concat(await listAll(it.path));
+    }
+    return files;
+  }
+  async function fetchTitle(file) {
+    try {
+      var res = await fetch('https://api.github.com/repos/' + OWNER + '/' + REPO + '/contents/' +
+        pathEncode(file.path) + '?ref=' + encodeURIComponent(BRANCH), { headers: headers() });
+      if (!res.ok) return '';
+      var j = await res.json();
+      var text = b64DecodeUtf8(j.content || '');
+      var m = text.match(/^---[\s\S]*?\ntitle:\s*['"]?([^'"\n]+)/);
+      return m ? m[1].trim() : '';
+    } catch (e) { return ''; }
+  }
+
+  function renderList(el, files, labels) {
+    el.innerHTML = '';
+    if (!files.length) { el.innerHTML = '<div class="wr-msg">暂无</div>'; return; }
+    files.forEach(function (f) {
+      var row = document.createElement('div');
+      row.className = 'wr-item';
+      var main = document.createElement('div');
+      main.className = 'wr-item-main';
+      var t = document.createElement('div');
+      t.className = 'wr-item-title';
+      t.textContent = (labels && labels[f.path]) || f.name.replace(/\.md$/, '');
+      var p = document.createElement('div');
+      p.className = 'wr-item-path';
+      p.textContent = f.path;
+      main.appendChild(t); main.appendChild(p);
+      var btn = document.createElement('button');
+      btn.className = 'wr-del';
+      btn.type = 'button';
+      btn.textContent = '删除';
+      btn.addEventListener('click', function () { delFile(f, btn); });
+      row.appendChild(main); row.appendChild(btn);
+      el.appendChild(row);
+    });
+  }
+
+  async function loadManage() {
+    var st = $('wr-manage-status');
+    setStatus(st, '加载中…');
+    try {
+      var posts = await listAll('content/posts');
+      var laodao = await listAll('content/laodao');
+      posts.sort(function (a, b) { return a.path < b.path ? 1 : -1; });
+      laodao.sort(function (a, b) { return a.path < b.path ? 1 : -1; });
+      var labels = {};
+      await Promise.all(posts.map(async function (f) { labels[f.path] = await fetchTitle(f); }));
+      renderList($('wr-list-posts'), posts, labels);
+      renderList($('wr-list-laodao'), laodao, {});
+      $('wr-count-posts').textContent = '（' + posts.length + '）';
+      $('wr-count-laodao').textContent = '（' + laodao.length + '）';
+      setStatus(st, '');
+    } catch (e) {
+      setStatus(st, e.message, 'err');
+    }
+  }
+
+  async function delFile(file, btn) {
+    var name = file.name.replace(/\.md$/, '');
+    if (!confirm('确定删除「' + name + '」？\n\n' + file.path + '\n\n删除后不可恢复。')) return;
+    btn.disabled = true;
+    setStatus($('wr-manage-status'), '删除中…');
+    try {
+      var res = await fetch('https://api.github.com/repos/' + OWNER + '/' + REPO + '/contents/' +
+        pathEncode(file.path), {
+        method: 'DELETE',
+        headers: Object.assign({ 'Content-Type': 'application/json' }, headers()),
+        body: JSON.stringify({ message: '删除：' + file.name, sha: file.sha, branch: BRANCH })
+      });
+      if (!res.ok) throw new Error('删除失败：' + (await res.json()).message);
+      setStatus($('wr-manage-status'), '已删除，1–2 分钟后下线', 'ok');
+      var item = btn.closest('.wr-item');
+      if (item) item.remove();
+    } catch (e) {
+      setStatus($('wr-manage-status'), e.message, 'err');
+      btn.disabled = false;
+    }
+  }
+
   function showEditor() {
     $('wr-login').hidden = true;
     $('wr-editor').hidden = false;
@@ -276,6 +415,7 @@
   }
 
   function init() {
+    setMode('post');
     var token = localStorage.getItem(KEY) || '';
     if (!token) {
       $('wr-login').hidden = false;
@@ -320,7 +460,6 @@
     $('wr-draft').addEventListener('click', function () {
       saveDraftLocal(); setStatus($('wr-status'), '草稿已存在本机（未发布）', 'ok');
     });
-    setMode('post');
   }
   document.addEventListener('DOMContentLoaded', init);
 })();
