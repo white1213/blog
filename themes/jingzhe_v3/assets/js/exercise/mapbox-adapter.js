@@ -42,7 +42,9 @@
   modules.createMapAdapter = (runtime, model) => {
 
     // Mapbox is optional in Core; the controller keeps a no-op compatibility API.
-    if (typeof mapboxgl === 'undefined' || !runtime) {
+    // 本站改用开源分支 MapLibre GL + 免 token 底图:优先 maplibre,兼容原 mapboxgl。
+    const gl = window.maplibregl || window.maplibre || window.mapboxgl;
+    if (typeof gl === 'undefined' || !runtime) {
       return;
     }
 
@@ -53,7 +55,7 @@
     const mapConfig = runtime.config || {};
     const reducedMotionQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)');
     const motionDuration = duration => reducedMotionQuery?.matches ? 0 : duration;
-    mapboxgl.accessToken = mapConfig.MAPBOX_TOKEN;
+    gl.accessToken = mapConfig.MAPBOX_TOKEN;
     const configuredMapCenter = Array.isArray(mapConfig.MAP_CENTER) && mapConfig.MAP_CENTER.length === 2
       ? mapConfig.MAP_CENTER.map(Number)
       : [0, 0];
@@ -81,7 +83,7 @@
     };
 
     // 3. 初始化地图实例
-    const map = new mapboxgl.Map({
+    const map = new gl.Map({
       container: 'mapbox-container',
       style: getMapStyleUrl(),
       center: configuredMapCenter,
@@ -239,7 +241,7 @@
         map.getSource('highlight-run-source').setData({ type: 'FeatureCollection', features: [] });
       }
 
-      const bounds = new mapboxgl.LngLatBounds();
+      const bounds = new gl.LngLatBounds();
       features.forEach(feature => {
         feature.geometry.coordinates.forEach(coordinate => bounds.extend(coordinate));
       });
@@ -525,7 +527,7 @@
 
         let bounds = null, center = null;
         if (hasDisplayTrack) {
-          bounds = new mapboxgl.LngLatBounds();
+          bounds = new gl.LngLatBounds();
           displayCoordinates.forEach(c => bounds.extend(c));
           center = bounds.getCenter();
         }

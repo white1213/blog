@@ -65,11 +65,11 @@ RSSNoContent = false
   mapboxToken = ""
   mapboxApiOrigin = "https://api.mapbox.com"
   mapboxEventsOrigin = "https://events.mapbox.com"
-  mapboxCssUrl = "https://lib.baomitu.com/mapbox-gl/3.2.0/mapbox-gl.css"
-  mapboxJsUrl = "https://lib.baomitu.com/mapbox-gl/3.2.0/mapbox-gl.js"
-  mapboxLightStyle = "mapbox://styles/mapbox/streets-v12"
-  mapboxDarkStyle = "mapbox://styles/mapbox/dark-v11"
-  mapCenter = [0.0, 0.0]
+  mapboxCssUrl = "https://lib.baomitu.com/maplibre-gl/4.7.1/maplibre-gl.css"
+  mapboxJsUrl = "https://lib.baomitu.com/maplibre-gl/4.7.1/maplibre-gl.js"
+  mapboxLightStyle = "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+  mapboxDarkStyle = "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
+  mapCenter = [117.2244, 37.8122]
   posterFilePrefix = "JingzheExercise"
 
 [services.rss]

@@ -356,7 +356,10 @@ Keep 导出的 `.fit` 文件只含 `file_id / sport / session / activity`，**�
 1. Keep 导出的「运动轨迹」图片链接（`static1.keepcdn.com`），或
 2. 带真实坐标的 GPX 文件
 
-有坐标后，把 `route_status` 改成 `available`、填入 `summary_polyline`，并在 `config/_default/params.toml` 配置 Mapbox token 即可显示交互地图。
+有坐标后，把 `route_status` 改成 `available`、填入 `summary_polyline` 即可显示交互地图。
+
+> 本站地图已从 Mapbox GL 切换为开源分支 **MapLibre GL + Carto 免费底图**（不注册、不填 token，国内可达）。
+> 历史 Keep 轨迹通过 `sync_keep_tracks.py`（Keep 账号登录 API）拉取并转 WGS84。
 
 ---
 
