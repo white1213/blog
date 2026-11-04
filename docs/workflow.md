@@ -7,6 +7,21 @@
 - 本地目录：`my-jingzhe/`（仓库根目录）
 - 技术栈：Hugo Extended + 惊蛰主题 + GitHub Actions + GitHub Pages
 
+## 快速入口
+
+| 用途 | 地址 |
+| --- | --- |
+| 博客首页 | <https://white1213.github.io/blog/> |
+| **网页写作** | <https://white1213.github.io/blog/write/> |
+| 仓库 | <https://github.com/white1213/blog> |
+| 部署状态 | <https://github.com/white1213/blog/actions> |
+
+> **写作页怎么进**：建议存书签或加到手机主屏。
+> - 电脑（Edge）：打开写作页 → `Ctrl + D` → 存到「收藏夹栏」；也可 `…` → 应用 → 安装为应用。
+> - iPhone：Safari 打开 → 分享 → 添加到主屏幕。
+> - Android：Chrome 打开 → 菜单 → 添加到主屏幕。
+> - 首次使用需粘贴 GitHub Token（只存在本机浏览器，手机与电脑各自存一次）。
+
 ---
 
 ## 一、总览
