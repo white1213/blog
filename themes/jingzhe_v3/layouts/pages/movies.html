@@ -13,47 +13,41 @@
   "4" "推荐"
   "5" "必看"
 }}
-  
+
 <div id="movie-list" class="ticket-layout">
- {{ range $index, $movie := $movies }}
+  {{ range $index, $movie := $movies }}
     {{ $rating := int (default 0 $movie.rating) }}
     {{ $certification := index $movieCertifications (printf "%d" $rating) }}
-    {{ $movieTime := "" }}{{ if $movie.create_time }}{{ $movieTime = time (printf "%s+08:00" $movie.create_time) }}{{ end }}
-    
-    {{ $mainColor := "" }}{{ $mainDarkColor := "" }} 
+
+    {{ $mainColor := "" }}{{ $mainDarkColor := "" }}
     {{ with $movie.color_scheme }}
       {{ if .primary_color_light }}{{ $mainColor = printf "#%s" .primary_color_light }}{{ end }}
       {{ if .primary_color_dark }}{{ $mainDarkColor = printf "#%s" .primary_color_dark }}{{ end }}
     {{ end }}
 
-    {{ $barcodeSeed := int $movie.id }}
-    
-    <div class="review-card ticket-item"
-         style="--movie-main-color: {{ $mainColor | safeCSS }}; --movie-main-dark-color: {{ $mainDarkColor | safeCSS }}; --stamp-rotate: {{ sub (mod $barcodeSeed 13) 7 }}deg; --stamp-right: {{ add 20 (mod $barcodeSeed 7) }}px; --stamp-bottom: {{ add 10 (mod $barcodeSeed 6) }}px; --stamp-opacity: {{ add 15 (mod $barcodeSeed 5) }}%; --stamp-dark-opacity: {{ add 22 (mod $barcodeSeed 5) }}%; --bc-a: {{ add 1 (mod $barcodeSeed 2) }}px; --bc-s: {{ mod $barcodeSeed 3 }}px; --bc-p: {{ add 5 (mod $barcodeSeed 5) }}px; --bc-o: {{ mod $barcodeSeed 7 }}px; --bc-q: {{ add 12 (mod $barcodeSeed 11) }}px; --bc-x: {{ mod $barcodeSeed 13 }}px;">
-      
-      <div class="ticket-body"{{ with $certification }} data-cert="{{ . }}"{{ end }}>
-        <div class="rc-comment">{{ if $movie.comment }}{{ $movie.comment }}{{ else }}暂无短评{{ end }}</div>
-      </div>
-
-      <div class="ticket-stub">
+    <article class="review-card movie-card"
+         style="--movie-main-color: {{ $mainColor | safeCSS }}; --movie-main-dark-color: {{ $mainDarkColor | safeCSS }};">
+      <a class="movie-poster" href="{{ $movie.link }}" target="_blank" rel="noopener"
+         aria-label="查看《{{ $movie.title }}》的豆瓣页面">
         {{ if $movie.cover }}
-        <img class="rc-poster" src="{{ $movie.cover | relURL }}" alt="《{{ $movie.title }}》海报" loading="lazy" decoding="async">
+        <img class="movie-poster-img" src="{{ $movie.cover | relURL }}" alt="《{{ $movie.title }}》海报" loading="lazy" decoding="async">
+        {{ else }}
+        <span class="movie-poster-img movie-poster-empty" aria-hidden="true">🎬</span>
         {{ end }}
-        <div class="rc-meta">
-          <div class="rc-title"><a href="{{ $movie.link }}" target="_blank">{{ $movie.title }}</a></div>
+        {{ if $certification }}
+        <span class="movie-cert">{{ $certification }}</span>
+        {{ end }}
+      </a>
+
+      <div class="movie-caption">
+        <div class="rc-title"><a href="{{ $movie.link }}" target="_blank" rel="noopener">{{ $movie.title }}</a></div>
+        <div class="movie-sub">
           <span class="rc-stars" role="img" aria-label="评分 {{ $rating }} 星，满分 5 星"
                 style="--movie-rating-width: {{ mul $rating 20 }}%;"></span>
-        </div>
-        <div class="ticket-footer">
-          <div class="rc-time">
-            {{ if $movieTime }}
-              <time>{{ partial "jingzhe/date.html" $movieTime }}</time>
-            {{ end }}
-          </div>
-          <div class="rc-barcode">NO. {{ $movie.id }}</div>
+          {{ if $movie.year }}<span class="movie-year">{{ $movie.year }}</span>{{ end }}
         </div>
       </div>
-    </div>
+    </article>
   {{ end }}
 </div>
 
