@@ -31,7 +31,7 @@ RSSNoContent = false
 
 [features]
   core = true
-  publisher = false
+  publisher = true
   social = false
   movies = true
   exercise = true
@@ -48,8 +48,8 @@ RSSNoContent = false
   avatarBaseUrl = "https://weavatar.com/avatar"
 
 [services.publisher]
-  workerUrl = ""
-  draftUrl = ""
+  workerUrl = "https://white1213-publisher.white1213.workers.dev"
+  draftUrl = "https://white1213-drafts.white1213.workers.dev"
   imageBaseUrl = ""
 
 [services.images]
