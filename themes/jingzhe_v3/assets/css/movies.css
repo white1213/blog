@@ -357,3 +357,21 @@ html[data-theme="dark"] .rc-stars::after {
   border-color: currentColor;
   border-style: dashed;
 }
+
+/* ---- 本站自定义:电影海报封面(自托管于 static/movies-covers) ---- */
+.rc-poster {
+  flex-shrink: 0;
+  align-self: center;
+  width: 56px;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  object-position: center top;
+  border-radius: 4px;
+  background-color: rgba(82, 68, 51, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+}
+
+[data-theme="dark"] .rc-poster {
+  background-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}

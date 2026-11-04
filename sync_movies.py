@@ -13,6 +13,7 @@ from typing import Callable, Dict, Iterable, List, Optional, Tuple
 
 DEFAULT_DOUBAN_ID = "jnnsu"
 LOCAL_FILE = Path("assets/data/movies.json")
+COVERS_DIR = Path("static/movies-covers")
 PAGE_SIZE = 50
 MAX_PAGES = 100
 REQUEST_RETRIES = 3
@@ -65,6 +66,7 @@ def normalize_interest(item: dict) -> dict:
         "link": subject.get("url", ""),
         "create_time": item.get("create_time", ""),
         "color_scheme": color_scheme,
+        "cover": (subject.get("cover_url") or "").strip(),
     }
 
 
@@ -196,6 +198,53 @@ def merge_movies(local_movies: Iterable[dict], remote_movies: Iterable[dict]) ->
     return merged, new_count, updated_count
 
 
+def download_covers(
+    movies: List[dict],
+    covers_dir: Path = COVERS_DIR,
+    opener: Callable = urllib.request.urlopen,
+) -> int:
+    """本站新增:把豆瓣海报下载进仓库自托管,避免图床外链失效。
+
+    已有本地文件时直接复用;下载失败退回空 cover,页面回退到
+    无海报的渐变票面。返回本次成功下载的数量。
+    """
+    downloaded = 0
+    for movie in movies:
+        movie_id = str(movie.get("id") or "").strip()
+        if not movie_id:
+            continue
+        relative_path = "movies-covers/{}.jpg".format(movie_id)
+        local_path = covers_dir / "{}.jpg".format(movie_id)
+        if not local_path.exists():
+            cover_url = (movie.get("cover") or "").strip()
+            if not cover_url:
+                movie["cover"] = ""
+                continue
+            request = urllib.request.Request(
+                cover_url,
+                headers={
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                    "Referer": "https://movie.douban.com/",
+                },
+            )
+            try:
+                with opener(request, timeout=20) as response:
+                    payload = response.read()
+                if not payload.startswith((b"\xff\xd8", b"\x89PNG")):
+                    raise ValueError("响应不是图片数据")
+                covers_dir.mkdir(parents=True, exist_ok=True)
+                temporary = local_path.with_suffix(".tmp")
+                temporary.write_bytes(payload)
+                os.replace(str(temporary), str(local_path))
+                downloaded += 1
+            except Exception as exc:
+                print("⚠️ 海报下载失败({}),该影片显示无海报票面:{}".format(movie_id, exc))
+                movie["cover"] = ""
+                continue
+        movie["cover"] = relative_path
+    return downloaded
+
+
 def atomic_write_json(path: Path, value: object) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     previous_mode = path.stat().st_mode & 0o777 if path.exists() else 0o644
@@ -230,6 +279,9 @@ def synchronize_movies(
     local_movies = load_local_movies(local_file)
     remote_movies = fetcher(douban_id)
     final_movies, new_count, updated_count = merge_movies(local_movies, remote_movies)
+    downloaded = download_covers(final_movies)
+    if downloaded:
+        print("🖼️ 已下载 {} 张海报到 {}。".format(downloaded, COVERS_DIR))
     changed = final_movies != local_movies
     if changed:
         atomic_write_json(local_file, final_movies)

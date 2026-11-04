@@ -68,8 +68,7 @@
 {{ partial "exercise-food-icons.html" . }}
 <div class="exercise-container">
   <div class="pagetitle">
-    {{ .Params.intro }}
-    <small class="exercise-privacy-note">(隐私保护：部分轨迹借杭州景点路线呈现)</small>
+    {{ .Params.intro | default .Description }}
   </div>
 
   <div class="bento-hero" id="bento-hero">

@@ -51,6 +51,9 @@ jobs:
           git config user.name "white1213-bot"
           git config user.email "1665491507a@gmail.com"
           git add assets/data/movies.json
+          if [ -d static/movies-covers ]; then
+            git add static/movies-covers
+          fi
           git commit -m "chore: sync douban movies"
           git push origin HEAD:main
           curl -sf -X POST \

@@ -2,7 +2,7 @@
 
 {{ define "main" }}
 <div class="pagetitle">
-  自己很喜欢观影，在能力范围内会把显示、音响、播放等设备添置得最好，然后静静的欣赏一部电影一季剧集一个故事一段人生～～，沉浸其中体验不同的酸甜苦辣。
+  {{ .Description | default .Title }}
 </div>
 
 {{ $movies := resources.Get "data/movies.json" | transform.Unmarshal }}
@@ -32,10 +32,13 @@
          style="--movie-main-color: {{ $mainColor | safeCSS }}; --movie-main-dark-color: {{ $mainDarkColor | safeCSS }}; --stamp-rotate: {{ sub (mod $barcodeSeed 13) 7 }}deg; --stamp-right: {{ add 20 (mod $barcodeSeed 7) }}px; --stamp-bottom: {{ add 10 (mod $barcodeSeed 6) }}px; --stamp-opacity: {{ add 15 (mod $barcodeSeed 5) }}%; --stamp-dark-opacity: {{ add 22 (mod $barcodeSeed 5) }}%; --bc-a: {{ add 1 (mod $barcodeSeed 2) }}px; --bc-s: {{ mod $barcodeSeed 3 }}px; --bc-p: {{ add 5 (mod $barcodeSeed 5) }}px; --bc-o: {{ mod $barcodeSeed 7 }}px; --bc-q: {{ add 12 (mod $barcodeSeed 11) }}px; --bc-x: {{ mod $barcodeSeed 13 }}px;">
       
       <div class="ticket-body"{{ with $certification }} data-cert="{{ . }}"{{ end }}>
-        <div class="rc-comment">{{ if $movie.comment }}{{ $movie.comment }}{{ else }}静静欣赏，沉浸其中...{{ end }}</div>
+        <div class="rc-comment">{{ if $movie.comment }}{{ $movie.comment }}{{ else }}暂无短评{{ end }}</div>
       </div>
 
       <div class="ticket-stub">
+        {{ if $movie.cover }}
+        <img class="rc-poster" src="{{ $movie.cover | relURL }}" alt="《{{ $movie.title }}》海报" loading="lazy" decoding="async">
+        {{ end }}
         <div class="rc-meta">
           <div class="rc-title"><a href="{{ $movie.link }}" target="_blank">{{ $movie.title }}</a></div>
           <span class="rc-stars" role="img" aria-label="评分 {{ $rating }} 星，满分 5 星"

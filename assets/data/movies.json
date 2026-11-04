@@ -23,7 +23,8 @@
       "primary_color_dark": "7f764f",
       "secondary_color": "f9f8f4",
       "is_dark": true
-    }
+    },
+    "cover": "movies-covers/36053256.jpg"
   },
   {
     "id": "35524443",
@@ -49,7 +50,8 @@
       "primary_color_dark": "4c2b1e",
       "secondary_color": "f9f6f4",
       "is_dark": true
-    }
+    },
+    "cover": "movies-covers/35524443.jpg"
   },
   {
     "id": "36288128",
@@ -75,7 +77,8 @@
       "primary_color_dark": "2d484c",
       "secondary_color": "f4f9f9",
       "is_dark": true
-    }
+    },
+    "cover": "movies-covers/36288128.jpg"
   },
   {
     "id": "26827945",
@@ -101,7 +104,8 @@
       "primary_color_dark": "38334c",
       "secondary_color": "f5f4f9",
       "is_dark": true
-    }
+    },
+    "cover": "movies-covers/26827945.jpg"
   },
   {
     "id": "26727298",
@@ -127,7 +131,8 @@
       "primary_color_dark": "2f4c4c",
       "secondary_color": "f4f9f9",
       "is_dark": true
-    }
+    },
+    "cover": "movies-covers/26727298.jpg"
   },
   {
     "id": "35377080",
@@ -153,7 +158,8 @@
       "primary_color_dark": "0f637f",
       "secondary_color": "f4f8f9",
       "is_dark": true
-    }
+    },
+    "cover": "movies-covers/35377080.jpg"
   },
   {
     "id": "35465741",
@@ -179,7 +185,8 @@
       "primary_color_dark": "3a4a4c",
       "secondary_color": "f4f9f9",
       "is_dark": true
-    }
+    },
+    "cover": "movies-covers/35465741.jpg"
   },
   {
     "id": "30163509",
@@ -205,7 +212,8 @@
       "primary_color_dark": "7f7470",
       "secondary_color": "f9f6f4",
       "is_dark": true
-    }
+    },
+    "cover": "movies-covers/30163509.jpg"
   },
   {
     "id": "26410594",
@@ -231,7 +239,8 @@
       "primary_color_dark": "4c3f33",
       "secondary_color": "f9f7f4",
       "is_dark": true
-    }
+    },
+    "cover": "movies-covers/26410594.jpg"
   },
   {
     "id": "26662193",
@@ -257,7 +266,8 @@
       "primary_color_dark": "7f7171",
       "secondary_color": "f9f4f5",
       "is_dark": true
-    }
+    },
+    "cover": "movies-covers/26662193.jpg"
   },
   {
     "id": "26311973",
@@ -283,7 +293,8 @@
       "primary_color_dark": "7f171a",
       "secondary_color": "f9f4f5",
       "is_dark": true
-    }
+    },
+    "cover": "movies-covers/26311973.jpg"
   },
   {
     "id": "25964071",
@@ -309,7 +320,8 @@
       "primary_color_dark": "7f6522",
       "secondary_color": "f9f8f4",
       "is_dark": true
-    }
+    },
+    "cover": "movies-covers/25964071.jpg"
   },
   {
     "id": "27605698",
@@ -335,7 +347,8 @@
       "primary_color_dark": "7f6723",
       "secondary_color": "f9f8f4",
       "is_dark": true
-    }
+    },
+    "cover": "movies-covers/27605698.jpg"
   },
   {
     "id": "36117731",
@@ -361,7 +374,8 @@
       "primary_color_dark": "7f7c72",
       "secondary_color": "f9f8f4",
       "is_dark": true
-    }
+    },
+    "cover": "movies-covers/36117731.jpg"
   },
   {
     "id": "35206436",
@@ -387,7 +401,8 @@
       "primary_color_dark": "7f6e4e",
       "secondary_color": "f9f8f4",
       "is_dark": true
-    }
+    },
+    "cover": "movies-covers/35206436.jpg"
   },
   {
     "id": "5912992",
@@ -413,7 +428,8 @@
       "primary_color_dark": "484c4b",
       "secondary_color": "f4f9f8",
       "is_dark": true
-    }
+    },
+    "cover": "movies-covers/5912992.jpg"
   },
   {
     "id": "2225784",
@@ -439,7 +455,8 @@
       "primary_color_dark": "7f7659",
       "secondary_color": "f9f8f4",
       "is_dark": true
-    }
+    },
+    "cover": "movies-covers/2225784.jpg"
   },
   {
     "id": "10432911",
@@ -465,7 +482,8 @@
       "primary_color_dark": "464c43",
       "secondary_color": "f6f9f4",
       "is_dark": true
-    }
+    },
+    "cover": "movies-covers/10432911.jpg"
   },
   {
     "id": "1308833",
@@ -491,7 +509,8 @@
       "primary_color_dark": "4c3228",
       "secondary_color": "f9f6f4",
       "is_dark": true
-    }
+    },
+    "cover": "movies-covers/1308833.jpg"
   },
   {
     "id": "25986180",
@@ -517,7 +536,8 @@
       "primary_color_dark": "3f464c",
       "secondary_color": "f4f7f9",
       "is_dark": true
-    }
+    },
+    "cover": "movies-covers/25986180.jpg"
   },
   {
     "id": "1292052",
@@ -543,6 +563,7 @@
       "primary_color_dark": "4c1f1c",
       "secondary_color": "f9f5f4",
       "is_dark": true
-    }
+    },
+    "cover": "movies-covers/1292052.jpg"
   }
 ]
