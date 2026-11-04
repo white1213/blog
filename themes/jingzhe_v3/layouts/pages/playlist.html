@@ -37,6 +37,13 @@
     {{ range $i, $song := .songs }}
     <li class="pl-song{{ if ge $i 15 }} is-hidden{{ end }}">
       <span class="pl-no">{{ add $i 1 }}</span>
+      <span class="pl-scover">
+        {{ if $song.cover }}
+        <img src="{{ $song.cover }}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+        {{ else }}
+        <span class="pl-scover-empty" aria-hidden="true">♪</span>
+        {{ end }}
+      </span>
       <span class="pl-title">
         {{ if $song.songmid }}
         <a href="https://y.qq.com/n/ryqq/songDetail/{{ $song.songmid }}" target="_blank" rel="noopener">{{ $song.name }}</a>

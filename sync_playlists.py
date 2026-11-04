@@ -67,12 +67,19 @@ def normalize_playlist(cd):
         singers = " / ".join(
             s.get("name", "") for s in (song.get("singer") or []) if s.get("name")
         )
+        albummid = (song.get("albummid") or "").strip()
+        # 专辑封面走 CDN 直链(已实测任意 Referer 均可访问),不占仓库空间。
+        song_cover = (
+            "https://y.gtimg.cn/music/photo_new/T002R300x300M000{}.jpg".format(albummid)
+            if albummid else ""
+        )
         songs.append({
             "name": (song.get("songname") or song.get("songorig") or "").strip(),
             "singers": singers,
             "album": (song.get("albumname") or "").strip(),
             "interval": int(song.get("interval") or 0),
             "songmid": (song.get("songmid") or "").strip(),
+            "cover": song_cover,
         })
     return {
         "id": playlist_id,
