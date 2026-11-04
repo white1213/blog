@@ -26,14 +26,15 @@ class ActivityFactStoreTests(unittest.TestCase):
         self.assertEqual([], validate_raw_activity_store(store))
         # 本站为自有数据：不假设具体来源，只校验每个来源的事实字段边界。
         for facts in store['sources'].values():
-            self.assertEqual(set(fact) - raw_fact_field_names(), set())
-            self.assertEqual(set(fact) & PROCESSOR_CACHE_FIELDS, set())
-            self.assertNotIn('source_id', fact)
-            self.assertNotIn('run_id', fact)
-            self.assertNotIn('pace_num', fact)
-            self.assertNotIn('display_name', fact)
-            if fact['route_status'] != 'available':
-                self.assertNotIn('summary_polyline', fact)
+            for fact in facts:
+                self.assertEqual(set(fact) - raw_fact_field_names(), set())
+                self.assertEqual(set(fact) & PROCESSOR_CACHE_FIELDS, set())
+                self.assertNotIn('source_id', fact)
+                self.assertNotIn('run_id', fact)
+                self.assertNotIn('pace_num', fact)
+                self.assertNotIn('display_name', fact)
+                if fact['route_status'] != 'available':
+                    self.assertNotIn('summary_polyline', fact)
 
     def test_existing_processor_cache_prevents_reprocessing(self):
         request = json.loads(
