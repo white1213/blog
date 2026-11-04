@@ -3,10 +3,17 @@
 /* ---- 海报墙网格 ---- */
 .ticket-layout {
   --movie-layout-gap: 22px;
+  --movie-wall-width: min(1320px, calc(100vw - 40px));
   display: grid;
   gap: var(--movie-layout-gap);
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: start;
+}
+
+/* 观影页:海报墙突破正文 840px 限制,居中撑满可用宽度,消除两侧大片留白 */
+.page-movies .ticket-layout {
+  width: var(--movie-wall-width);
+  margin-left: calc((100% - var(--movie-wall-width)) / 2);
 }
 
 @media (min-width: 560px) {
@@ -21,7 +28,7 @@
   }
 }
 
-@media (min-width: 1280px) {
+@media (min-width: 1180px) {
   .ticket-layout {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
