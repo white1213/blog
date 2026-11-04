@@ -168,6 +168,57 @@ def fetch_remote_movies(
     return movies
 
 
+DETAIL_API = "https://m.douban.com/rexxar/api/v2/movie/{}"
+
+
+def fetch_movie_intro(
+    movie_id: str,
+    opener: Callable = urllib.request.urlopen,
+) -> str:
+    """本站新增:从豆瓣影片详情接口取剧情简介。"""
+    request = urllib.request.Request(
+        DETAIL_API.format(movie_id),
+        headers={
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Referer": "https://m.douban.com/",
+        },
+    )
+    with opener(request, timeout=15) as response:
+        payload = json.loads(response.read().decode("utf-8"))
+    return (payload.get("intro") or "").strip()
+
+
+def enrich_intros(
+    movies: List[dict],
+    sleep_fn: Callable[[float], None] = time.sleep,
+    jitter_fn: Callable[[float, float], float] = random.uniform,
+) -> int:
+    """只为缺少简介的影片补抓,避免每次同步重复请求。返回本次补抓数量。"""
+    fetched = 0
+    for movie in movies:
+        if (movie.get("intro") or "").strip():
+            continue
+        movie_id = str(movie.get("id") or "").strip()
+        if not movie_id:
+            continue
+        last_error: Optional[Exception] = None
+        for attempt in range(1, REQUEST_RETRIES + 1):
+            try:
+                movie["intro"] = fetch_movie_intro(movie_id)
+                fetched += 1
+                last_error = None
+                break
+            except Exception as exc:
+                last_error = exc
+                if attempt < REQUEST_RETRIES:
+                    sleep_fn(float(attempt))
+        if last_error is not None:
+            print("⚠️ 简介获取失败({}),暂不显示简介:{}".format(movie_id, last_error))
+            movie["intro"] = ""
+        sleep_fn(jitter_fn(0.8, 1.6))
+    return fetched
+
+
 def merge_movies(local_movies: Iterable[dict], remote_movies: Iterable[dict]) -> Tuple[List[dict], int, int]:
     local_list = list(local_movies)
     remote_list = list(remote_movies)
@@ -184,9 +235,13 @@ def merge_movies(local_movies: Iterable[dict], remote_movies: Iterable[dict]) ->
         if not movie_id or movie_id in remote_ids:
             continue
         remote_ids.add(movie_id)
-        if movie_id not in local_by_id:
+        local_entry = local_by_id.get(movie_id)
+        # 简介来自详情接口,列表接口不返回;合并时保留本地已有简介,避免被冲掉。
+        if local_entry is not None and not (movie.get("intro") or "").strip():
+            movie["intro"] = local_entry.get("intro", "")
+        if local_entry is None:
             new_count += 1
-        elif local_by_id[movie_id] != movie:
+        elif local_entry != movie:
             updated_count += 1
         merged.append(movie)
 
@@ -279,6 +334,9 @@ def synchronize_movies(
     local_movies = load_local_movies(local_file)
     remote_movies = fetcher(douban_id)
     final_movies, new_count, updated_count = merge_movies(local_movies, remote_movies)
+    enriched = enrich_intros(final_movies)
+    if enriched:
+        print("📝 已补全 {} 条影片简介。".format(enriched))
     downloaded = download_covers(final_movies)
     if downloaded:
         print("🖼️ 已下载 {} 张海报到 {}。".format(downloaded, COVERS_DIR))

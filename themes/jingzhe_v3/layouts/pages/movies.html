@@ -46,6 +46,9 @@
                 style="--movie-rating-width: {{ mul $rating 20 }}%;"></span>
           {{ if $movie.year }}<span class="movie-year">{{ $movie.year }}</span>{{ end }}
         </div>
+        {{ if $movie.intro }}
+        <p class="movie-intro">{{ $movie.intro }}</p>
+        {{ end }}
       </div>
     </article>
   {{ end }}
