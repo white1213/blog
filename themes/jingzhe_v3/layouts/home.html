@@ -2,8 +2,79 @@
 {{ define "title" }}{{ site.Title }}{{ end }}
 
 {{ define "main" }}
- {{/* 分页，默认 25 条一页 */}}
 {{ $socialEnabled := partial "jingzhe/feature-enabled.html" "social" }}
+
+{{/* ===== 门户数据 ===== */}}
+{{ $posts := where site.RegularPages "Type" "posts" }}
+{{ $movies := resources.Get "data/movies.json" | transform.Unmarshal }}
+{{ $playlists := resources.Get "data/playlists.json" | transform.Unmarshal }}
+{{ $acts := resources.Get "data/exercise/activities.json" | transform.Unmarshal }}
+
+{{ $postCount := len $posts }}
+{{ $movieCount := len $movies }}
+{{ $runCount := len $acts }}
+{{ $songCount := 0 }}
+{{ range $playlists }}{{ with .song_count }}{{ $songCount = add $songCount (int .) }}{{ end }}{{ end }}
+{{ $runKm := 0.0 }}
+{{ range $acts }}{{ with .distance }}{{ $runKm = add $runKm (float .) }}{{ end }}{{ end }}
+{{ $runKmRounded := printf "%.0f" $runKm }}
+
+{{ $actsSorted := sort $acts "start_date_local" "desc" }}
+{{ $latestPost := index $posts 0 }}
+{{ $latestMovie := index $movies 0 }}
+{{ $latestAct := index $actsSorted 0 }}
+{{ $firstPlaylist := index $playlists 0 }}
+
+{{/* ===== 头像与统计 ===== */}}
+<div class="home-hero">
+  <div class="home-hero-avatar">
+    {{ with site.Params.brand.avatar }}
+      <img src="{{ . }}" alt="{{ site.Title }}">
+    {{ else }}
+      <span class="home-hero-monogram">{{ substr site.Title 0 1 }}</span>
+    {{ end }}
+  </div>
+  <div class="home-hero-info">
+    <h1 class="home-hero-title">{{ site.Title }}</h1>
+    <p class="home-hero-desc">{{ site.Params.description }}</p>
+    <div class="home-hero-stats">
+      <a class="home-stat" href="{{ "posts/" | relURL }}"><b>{{ $postCount }}</b> 文章</a>
+      <a class="home-stat" href="{{ "movies/" | relURL }}"><b>{{ $movieCount }}</b> 观影</a>
+      <a class="home-stat" href="{{ "exercise/" | relURL }}"><b>{{ $runCount }}</b> 次跑步 · <b>{{ $runKmRounded }}</b> km</a>
+      <a class="home-stat" href="{{ "playlist/" | relURL }}"><b>{{ $songCount }}</b> 首歌</a>
+    </div>
+  </div>
+</div>
+
+{{/* ===== 板块入口 ===== */}}
+<div class="home-sections">
+  <a class="home-card" href="{{ "posts/" | relURL }}">
+    <div class="home-card-icon">✍️</div>
+    <div class="home-card-name">随笔</div>
+    <div class="home-card-num">{{ $postCount }} 篇</div>
+    {{ with $latestPost }}<div class="home-card-latest">最新：{{ .Title }}</div>{{ end }}
+  </a>
+  <a class="home-card" href="{{ "movies/" | relURL }}">
+    <div class="home-card-icon">🎬</div>
+    <div class="home-card-name">观影</div>
+    <div class="home-card-num">{{ $movieCount }} 部</div>
+    {{ with $latestMovie }}<div class="home-card-latest">最近：《{{ .title }}》</div>{{ end }}
+  </a>
+  <a class="home-card" href="{{ "exercise/" | relURL }}">
+    <div class="home-card-icon">🏃</div>
+    <div class="home-card-name">动起来</div>
+    <div class="home-card-num">{{ $runCount }} 次 · {{ $runKmRounded }} km</div>
+    {{ with $latestAct }}<div class="home-card-latest">最近：{{ .display_name }}</div>{{ end }}
+  </a>
+  <a class="home-card" href="{{ "playlist/" | relURL }}">
+    <div class="home-card-icon">🎵</div>
+    <div class="home-card-name">音乐</div>
+    <div class="home-card-num">{{ $songCount }} 首</div>
+    {{ with $firstPlaylist }}<div class="home-card-latest">歌单：《{{ .name }}》</div>{{ end }}
+  </a>
+</div>
+
+{{/* ===== 最新动态时间流 ===== */}}
 <div id="index-card-timeline" class="index-card">
   {{ $stream := where site.RegularPages "Type" "in" (slice "posts" "laodao") }}
   {{ $paginator := .Paginate $stream.ByDate.Reverse 25 }}
@@ -12,14 +83,14 @@
     {{/* 随笔 */}}
     {{ if eq .Type "posts" }}
       <div class="card-timeline index-post">
-        <div class="posts-index-heard">   
+        <div class="posts-index-heard">
           <time class="index-post-time" datetime="{{ .Date.Format "2006-01-02T15:04:05Z07:00" }}">
             {{ partial "jingzhe/date.html" .Date }}
           </time>
           <div class="posts-index-info">随笔</div>
         </div>
         <div class="index-post-title"><a href="{{ .RelPermalink }}">{{ .Title }}</a></div>
-         <div class="posts-description">{{ .Params.description }}</div>   
+         <div class="posts-description">{{ .Params.description }}</div>
          {{ if .Params.image }}
         {{ $image := partial "jingzhe/responsive-image.html" (dict "src" .Params.image) }}
         <a href="{{ .RelPermalink }}" class="index-post-img-wrap">
@@ -27,7 +98,7 @@
                {{ if $image.enabled }}srcset="{{ $image.small | safeURL }} {{ $image.smallWidth }}w, {{ $image.large | safeURL }} {{ $image.largeWidth }}w"
                sizes="(min-width: 840px) 252px, (min-width: 768px) 30vw, 50vw"{{ end }}
                alt="{{ .Title }}" />
-        </a> 
+        </a>
         {{ end }}
       </div>
        {{/* 唠叨 */}}

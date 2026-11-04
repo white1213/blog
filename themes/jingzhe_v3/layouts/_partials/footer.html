@@ -3,8 +3,7 @@
     
     <p class="footer-info">
       &copy; {{ now.Year }} <a href="{{ site.Home.RelPermalink }}">{{ site.Params.brand.footerName | default site.Title }}</a>.
-      由 <a href="https://gohugo.io/" target="_blank" rel="noopener"> Hugo </a> 提供强力驱动,
-      <a href="https://www.cloudflare.com/" target="_blank" rel="noopener">Cloudflare</a> 提供存储/加速, ChatGPT & Gemini 疯狂手搓代码支持.
+      由 <a href="https://gohugo.io/" target="_blank" rel="noopener"> Hugo </a> 提供强力驱动 · 主题 <a href="https://github.com/koobai/blog" target="_blank" rel="noopener">惊蛰 Jingzhe</a>.
     </p>
 
     {{ with site.Params.brand.footerTagline }}<p class="footer-info">{{ . }}</p>{{ end }}
@@ -15,5 +14,5 @@
 {{ $postType := default "posts" site.Params.contentTypeName }}
 {{ $needsImageViewer := or .IsHome (eq .Type "laodao") (and .IsPage (eq .Type $postType)) (eq .Layout "about") }}
 {{ if $needsImageViewer }}
-<script src="/js/view-image.min.js"></script>
+<script src="{{ "js/view-image.min.js" | relURL }}"></script>
 {{ end }}
