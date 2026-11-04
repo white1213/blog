@@ -31,7 +31,7 @@ RSSNoContent = false
 
 [features]
   core = true
-  publisher = true
+  publisher = false
   social = false
   movies = true
   exercise = true

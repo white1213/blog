@@ -1,0 +1,328 @@
+{{ define "body_classes" }}page-write{{ end }}
+
+{{ define "main" }}
+{{ $repo := site.Params.repository }}
+<div class="pagetitle">{{ .Description | default .Title }}</div>
+
+<div class="wr-app">
+  <div id="wr-login" class="wr-card" hidden>
+    <h2 class="wr-h2">连接 GitHub</h2>
+    <p class="wr-hint">粘贴你的 GitHub Token（<code>github_pat_...</code>，需对 <code>{{ $repo.owner }}/{{ $repo.name }}</code> 有 Contents 读写权限）。Token 只保存在本机浏览器。</p>
+    <input id="wr-token" type="password" class="wr-input" placeholder="github_pat_..." autocomplete="off">
+    <div class="wr-row">
+      <button id="wr-save-token" class="wr-btn wr-btn-primary" type="button">保存并进入</button>
+      <span id="wr-login-msg" class="wr-msg"></span>
+    </div>
+  </div>
+
+  <div id="wr-editor" hidden>
+    <div class="wr-toolbar">
+      <div class="wr-tabs">
+        <button class="wr-tab is-active" data-mode="post" type="button">写随笔</button>
+        <button class="wr-tab" data-mode="laodao" type="button">发唠叨</button>
+      </div>
+      <div class="wr-right">
+        <span id="wr-user" class="wr-msg"></span>
+        <button id="wr-logout" class="wr-btn wr-btn-ghost" type="button">换 Token</button>
+      </div>
+    </div>
+
+    <div id="wr-post-fields" class="wr-fields">
+      <div class="wr-field">
+        <label for="wr-title">标题</label>
+        <input id="wr-title" class="wr-input" placeholder="文章标题">
+      </div>
+      <div class="wr-grid2">
+        <div class="wr-field">
+          <label for="wr-slug">文件名（可选，英文/数字）</label>
+          <input id="wr-slug" class="wr-input" placeholder="留空则用标题">
+        </div>
+        <div class="wr-field">
+          <label for="wr-tags">标签（逗号分隔）</label>
+          <input id="wr-tags" class="wr-input" placeholder="随笔, 生活">
+        </div>
+      </div>
+      <div class="wr-field">
+        <label for="wr-desc">摘要（可选）</label>
+        <input id="wr-desc" class="wr-input" placeholder="一句话摘要">
+      </div>
+    </div>
+
+    <div class="wr-editor-area">
+      <div class="wr-pane">
+        <div class="wr-pane-head">Markdown</div>
+        <textarea id="wr-body" class="wr-textarea" placeholder="开始写…"></textarea>
+      </div>
+      <div class="wr-pane">
+        <div class="wr-pane-head">预览</div>
+        <div id="wr-preview" class="wr-preview"></div>
+      </div>
+    </div>
+
+    <div class="wr-actions">
+      <button id="wr-publish" class="wr-btn wr-btn-primary" type="button">发布</button>
+      <button id="wr-draft" class="wr-btn wr-btn-ghost" type="button">存草稿</button>
+      <span id="wr-status" class="wr-msg"></span>
+    </div>
+    <p class="wr-hint">发布后会提交到 <code>{{ $repo.owner }}/{{ $repo.name }}</code>，约 1–2 分钟后自动上线。</p>
+  </div>
+</div>
+
+<style>
+.page-write .wr-app { width: min(1100px, calc(100vw - 40px)); margin-left: calc((100% - min(1100px, calc(100vw - 40px))) / 2); }
+.wr-card { background: var(--background-card-color); border: 1px solid rgba(120,110,90,.16); border-radius: 14px; padding: 22px; }
+.wr-h2 { margin: 0 0 10px; font-size: 1.1rem; }
+.wr-hint { color: var(--text-info-color); font-size: .82rem; line-height: 1.6; margin: 8px 0; }
+.wr-input, .wr-textarea { width: 100%; box-sizing: border-box; background: transparent; color: var(--text-content-color); border: 1px solid rgba(120,110,90,.28); border-radius: 8px; padding: 9px 11px; font: inherit; }
+.wr-input:focus, .wr-textarea:focus { outline: 2px solid var(--text-highlight-color); outline-offset: 1px; }
+.wr-row { display: flex; gap: 10px; align-items: center; margin-top: 10px; }
+.wr-btn { appearance: none; border-radius: 8px; padding: 8px 16px; font: inherit; cursor: pointer; border: 1px solid transparent; }
+.wr-btn-primary { background: var(--text-highlight-color); color: var(--background-body-color); }
+.wr-btn-ghost { background: transparent; color: var(--text-info-color); border-color: rgba(120,110,90,.3); }
+.wr-btn:disabled { opacity: .5; cursor: default; }
+.wr-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+.wr-tabs { display: flex; gap: 6px; }
+.wr-tab { appearance: none; border: 1px solid rgba(120,110,90,.28); background: transparent; color: var(--text-info-color); border-radius: 999px; padding: 6px 14px; cursor: pointer; font: inherit; font-size: .86rem; }
+.wr-tab.is-active { background: var(--text-highlight-color); color: var(--background-body-color); border-color: transparent; }
+.wr-right { display: flex; gap: 10px; align-items: center; }
+.wr-fields { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+.wr-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.wr-field label { display: block; font-size: .78rem; color: var(--text-info-color); margin-bottom: 4px; }
+.wr-editor-area { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.wr-pane { display: flex; flex-direction: column; min-width: 0; }
+.wr-pane-head { font-size: .76rem; color: var(--text-info-color); margin-bottom: 5px; }
+.wr-textarea { min-height: 380px; resize: vertical; font-family: "GeistMono", ui-monospace, monospace; font-size: .9rem; line-height: 1.6; }
+.wr-preview { min-height: 380px; max-height: 640px; overflow: auto; border: 1px dashed rgba(120,110,90,.22); border-radius: 8px; padding: 12px 14px; line-height: 1.7; font-size: .92rem; }
+.wr-preview h1,.wr-preview h2,.wr-preview h3 { margin: .8em 0 .4em; }
+.wr-preview p { margin: .6em 0; }
+.wr-preview code { background: rgba(120,110,90,.14); padding: 1px 5px; border-radius: 4px; }
+.wr-preview pre { background: rgba(120,110,90,.12); padding: 10px; border-radius: 8px; overflow: auto; }
+.wr-preview blockquote { margin: .6em 0; padding-left: 12px; border-left: 3px solid rgba(120,110,90,.35); color: var(--text-info-color); }
+.wr-preview img { max-width: 100%; border-radius: 8px; }
+.wr-actions { display: flex; gap: 10px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+.wr-msg { font-size: .8rem; color: var(--text-info-color); }
+.wr-msg.is-ok { color: #2f9e5b; }
+.wr-msg.is-err { color: #d9534f; }
+@media (max-width: 760px) {
+  .wr-editor-area { grid-template-columns: 1fr; }
+  .wr-grid2 { grid-template-columns: 1fr; }
+}
+</style>
+
+<script>
+(function () {
+  'use strict';
+  var OWNER = {{ $repo.owner | jsonify | safeJS }};
+  var REPO = {{ $repo.name | jsonify | safeJS }};
+  var BRANCH = {{ $repo.branch | default "main" | jsonify | safeJS }};
+  var KEY = 'jingzhe_gh_token';
+  var DRAFT_KEY = 'jingzhe_draft_v1';
+
+  var $ = function (id) { return document.getElementById(id); };
+  var state = { token: '', mode: 'post' };
+
+  function headers() {
+    return { 'Authorization': 'Bearer ' + state.token, 'Accept': 'application/vnd.github+json' };
+  }
+  function b64utf8(str) {
+    var bytes = new TextEncoder().encode(str), bin = '';
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  }
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function nowLocal() {
+    var d = new Date();
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' +
+      pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()) + '+08:00';
+  }
+  function fileUrl(path) {
+    return 'https://github.com/' + OWNER + '/' + REPO + '/blob/' + BRANCH + '/' + path.split('/').map(encodeURIComponent).join('/');
+  }
+  function setStatus(el, text, kind) {
+    el.textContent = text;
+    el.className = 'wr-msg' + (kind ? ' is-' + kind : '');
+  }
+
+  async function ghGet(path) {
+    var res = await fetch('https://api.github.com/repos/' + OWNER + '/' + REPO + '/contents/' +
+      path.split('/').map(encodeURIComponent).join('/') + '?ref=' + encodeURIComponent(BRANCH), { headers: headers() });
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error('读取失败：' + (await res.json()).message);
+    return await res.json();
+  }
+  async function ghPut(path, content, message) {
+    var existing = await ghGet(path);
+    var body = { message: message, content: b64utf8(content), branch: BRANCH };
+    if (existing && existing.sha) body.sha = existing.sha;
+    var res = await fetch('https://api.github.com/repos/' + OWNER + '/' + REPO + '/contents/' +
+      path.split('/').map(encodeURIComponent).join('/'), {
+      method: 'PUT',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, headers()),
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error('提交失败：' + (await res.json()).message);
+    return await res.json();
+  }
+
+  function md(src) {
+    var h = src.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    h = h.replace(/```([\s\S]*?)```/g, function (m, c) { return '<pre><code>' + c + '</code></pre>'; });
+    h = h.replace(/^###### (.*)$/gm, '<h6>$1</h6>').replace(/^##### (.*)$/gm, '<h5>$1</h5>')
+      .replace(/^#### (.*)$/gm, '<h4>$1</h4>').replace(/^### (.*)$/gm, '<h3>$1</h3>')
+      .replace(/^## (.*)$/gm, '<h2>$1</h2>').replace(/^# (.*)$/gm, '<h1>$1</h1>');
+    h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>');
+    h = h.replace(/`([^`]+)`/g, '<code>$1</code>');
+    h = h.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img alt="$1" src="$2">');
+    h = h.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    h = h.replace(/^&gt; (.*)$/gm, '<blockquote>$1</blockquote>');
+    h = h.replace(/^- (.*)$/gm, '<li>$1</li>');
+    h = h.replace(/(<li>[\s\S]*?<\/li>)/g, '<ul>$1</ul>');
+    h = h.split(/\n{2,}/).map(function (p) {
+      var t = p.trim();
+      if (!t) return '';
+      if (/^<(h\d|ul|ol|pre|blockquote|img|table)/.test(t)) return t;
+      return '<p>' + t.replace(/\n/g, '<br>') + '</p>';
+    }).join('\n');
+    return h;
+  }
+
+  function refreshPreview() {
+    $('wr-preview').innerHTML = md($('wr-body').value || '');
+  }
+
+  function saveDraftLocal() {
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({
+        mode: state.mode, title: $('wr-title').value, slug: $('wr-slug').value,
+        tags: $('wr-tags').value, desc: $('wr-desc').value, body: $('wr-body').value
+      }));
+    } catch (e) {}
+  }
+  function loadDraftLocal() {
+    try {
+      var d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
+      if (!d) return;
+      $('wr-title').value = d.title || ''; $('wr-slug').value = d.slug || '';
+      $('wr-tags').value = d.tags || ''; $('wr-desc').value = d.desc || '';
+      $('wr-body').value = d.body || '';
+      if (d.mode) setMode(d.mode);
+      refreshPreview();
+    } catch (e) {}
+  }
+
+  function setMode(mode) {
+    state.mode = mode;
+    document.querySelectorAll('.wr-tab').forEach(function (b) {
+      b.classList.toggle('is-active', b.dataset.mode === mode);
+    });
+    $('wr-post-fields').style.display = mode === 'post' ? '' : 'none';
+  }
+
+  function slugify(text) {
+    return text.trim().toLowerCase().replace(/[\s\/\\:*?"<>|]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80);
+  }
+
+  async function publish() {
+    var btn = $('wr-publish'), status = $('wr-status');
+    var body = $('wr-body').value.trim();
+    var t = nowLocal();
+    var path, content, message;
+    if (!body) { setStatus(status, '内容不能为空', 'err'); return; }
+    if (state.mode === 'post') {
+      var title = $('wr-title').value.trim();
+      if (!title) { setStatus(status, '请填写标题', 'err'); return; }
+      var slug = slugify($('wr-slug').value.trim() || title) || ('post-' + Date.now());
+      var tags = $('wr-tags').value.split(/[,，]/).map(function (s) { return s.trim(); }).filter(Boolean);
+      var desc = $('wr-desc').value.trim();
+      var fm = '---\ntitle: ' + JSON.stringify(title) + '\ndate: ' + t + '\n';
+      if (desc) fm += 'description: ' + JSON.stringify(desc) + '\n';
+      if (tags.length) fm += 'tags: [' + tags.map(function (s) { return JSON.stringify(s); }).join(', ') + ']\n';
+      fm += '---\n\n';
+      path = 'content/posts/' + slug + '.md';
+      content = fm + body + '\n';
+      message = '新增文章：' + title;
+    } else {
+      var d = new Date();
+      var y = d.getFullYear(), m = pad(d.getMonth() + 1), day = pad(d.getDate());
+      var hh = pad(d.getHours()), mm = pad(d.getMinutes()), ss = pad(d.getSeconds());
+      path = 'content/laodao/' + y + '/' + m + '/' + y + m + day + '-' + hh + mm + ss + '.md';
+      content = '---\ndate: ' + t + '\n---\n\n' + body + '\n';
+      message = '新增唠叨';
+    }
+    btn.disabled = true;
+    setStatus(status, '提交中…');
+    try {
+      await ghPut(path, content, message);
+      setStatus(status, '已发布，1–2 分钟后上线', 'ok');
+      setTimeout(function () {
+        var link = document.createElement('a');
+        link.href = fileUrl(path); link.target = '_blank'; link.rel = 'noopener';
+        link.textContent = '查看文件';
+        status.appendChild(document.createTextNode(' '));
+        status.appendChild(link);
+      }, 0);
+      localStorage.removeItem(DRAFT_KEY);
+    } catch (e) {
+      setStatus(status, e.message, 'err');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function showEditor() {
+    $('wr-login').hidden = true;
+    $('wr-editor').hidden = false;
+    $('wr-user').textContent = '已连接 ' + OWNER + '/' + REPO;
+  }
+
+  function init() {
+    var token = localStorage.getItem(KEY) || '';
+    if (!token) {
+      $('wr-login').hidden = false;
+    } else {
+      state.token = token;
+      showEditor();
+      loadDraftLocal();
+    }
+    $('wr-save-token').addEventListener('click', async function () {
+      var v = $('wr-token').value.trim();
+      var msg = $('wr-login-msg');
+      if (!/^gh[ps]_|^github_pat_/.test(v)) { setStatus(msg, 'Token 格式不对', 'err'); return; }
+      setStatus(msg, '验证中…');
+      try {
+        var res = await fetch('https://api.github.com/repos/' + OWNER + '/' + REPO, {
+          headers: { 'Authorization': 'Bearer ' + v, 'Accept': 'application/vnd.github+json' }
+        });
+        if (!res.ok) {
+          throw new Error(res.status === 401 ? 'Token 无效或已过期'
+            : res.status === 404 ? '这个 Token 没有该仓库的权限'
+            : '验证失败 HTTP ' + res.status);
+        }
+        localStorage.setItem(KEY, v); state.token = v; showEditor(); loadDraftLocal();
+        setStatus(msg, '');
+      } catch (e) {
+        setStatus(msg, e.message, 'err');
+      }
+    });
+    $('wr-logout').addEventListener('click', function () {
+      localStorage.removeItem(KEY); state.token = '';
+      $('wr-editor').hidden = true; $('wr-login').hidden = false;
+      $('wr-token').value = '';
+    });
+    document.querySelectorAll('.wr-tab').forEach(function (b) {
+      b.addEventListener('click', function () { setMode(b.dataset.mode); saveDraftLocal(); });
+    });
+    $('wr-body').addEventListener('input', function () { refreshPreview(); saveDraftLocal(); });
+    ['wr-title', 'wr-slug', 'wr-tags', 'wr-desc'].forEach(function (id) {
+      $(id).addEventListener('input', saveDraftLocal);
+    });
+    $('wr-publish').addEventListener('click', publish);
+    $('wr-draft').addEventListener('click', function () {
+      saveDraftLocal(); setStatus($('wr-status'), '草稿已存在本机（未发布）', 'ok');
+    });
+    setMode('post');
+  }
+  document.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+{{ end }}
