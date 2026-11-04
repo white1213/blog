@@ -1,0 +1,248 @@
+<div class="ex-analytics" id="ex-analytics">
+  <div class="ex-analytics-head">
+    <h2 class="ex-analytics-title">数据分析</h2>
+    <span class="ex-analytics-sub">基于全部运动记录自动生成</span>
+  </div>
+  <div class="ex-stat-grid" id="ex-stat-grid"></div>
+  <div class="ex-chart-card">
+    <div class="ex-chart-title">月跑量（近 12 个月，柱上数字为当月次数）</div>
+    <div id="ex-chart-monthly"></div>
+  </div>
+  <div class="ex-chart-card">
+    <div class="ex-chart-title">配速趋势（点越低 = 配速越快）</div>
+    <div id="ex-chart-pace"></div>
+  </div>
+  <div class="ex-chart-card">
+    <div class="ex-chart-title">星期分布（一周里哪天最能跑）</div>
+    <div id="ex-chart-weekday"></div>
+  </div>
+</div>
+
+<style>
+.ex-analytics { margin: 4px 0 24px; }
+.ex-analytics-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+.ex-analytics-title { margin: 0; font-size: 1.06rem; }
+.ex-analytics-sub { font-size: .74rem; color: var(--text-info-color); }
+.ex-stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+.ex-stat-card { background: var(--background-card-color); border: 1px solid rgba(120, 110, 90, 0.16); border-radius: 12px; padding: 12px 14px; }
+.ex-stat-num { font-size: 1.14rem; font-weight: 600; line-height: 1.3; }
+.ex-stat-num small { font-size: .74rem; font-weight: 400; color: var(--text-info-color); margin-left: 2px; }
+.ex-stat-label { font-size: .74rem; color: var(--text-info-color); }
+.ex-chart-card { background: var(--background-card-color); border: 1px solid rgba(120, 110, 90, 0.16); border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+.ex-chart-title { font-size: .84rem; color: var(--text-info-color); margin: 0 0 10px; }
+.ex-svg { width: 100%; height: auto; display: block; }
+.ex-svg-label { font-size: 10px; fill: var(--text-info-color); }
+.ex-svg-line { stroke: rgba(128, 128, 128, 0.18); stroke-width: 1; }
+@media (max-width: 640px) {
+  .ex-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+</style>
+
+<script>
+(function () {
+  'use strict';
+  function init() {
+    var all = (window.KoobaiRun && window.KoobaiRun.data) || [];
+    var RUN_TYPES = { Run: 1, TrailRun: 1, Treadmill: 1, VirtualRun: 1 };
+    var runs = [];
+    all.forEach(function (r) {
+      if (!r.start_date_local || !(r.distance > 0)) return;
+      var secs = parseTime(r.moving_time);
+      if (!secs) return;
+      runs.push({
+        d: new Date(r.start_date_local),
+        dateStr: r.start_date_local.slice(0, 10),
+        km: r.distance,
+        secs: secs,
+        pace: secs / r.distance,
+        cal: r.calories || 0,
+        type: r.type,
+        name: r.display_name
+      });
+    });
+    runs.sort(function (a, b) { return a.d - b.d; });
+    if (!runs.length) { document.getElementById('ex-analytics').style.display = 'none'; return; }
+
+    renderStats(runs);
+    drawMonthly(document.getElementById('ex-chart-monthly'), monthlyData(runs));
+    drawPace(document.getElementById('ex-chart-pace'), runs.filter(function (r) { return RUN_TYPES[r.type]; }));
+    drawWeekday(document.getElementById('ex-chart-weekday'), runs);
+  }
+
+  function parseTime(s) {
+    if (!s) return 0;
+    var p = String(s).split(':').map(Number);
+    if (p.some(isNaN)) return 0;
+    if (p.length === 2) return p[0] * 60 + p[1];
+    if (p.length === 3) return p[0] * 3600 + p[1] * 60 + p[2];
+    return 0;
+  }
+  function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+  function paceText(sec) {
+    var m = Math.floor(sec / 60), s = Math.round(sec % 60);
+    if (s === 60) { m++; s = 0; }
+    return m + ':' + pad2(s);
+  }
+  function svgEl(tag, attrs) {
+    var el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    for (var k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  }
+  function label(svg, x, y, text, anchor) {
+    var t = svgEl('text', { x: x, y: y, 'text-anchor': anchor || 'start', 'class': 'ex-svg-label' });
+    t.textContent = text;
+    svg.appendChild(t);
+  }
+
+  function renderStats(runs) {
+    var totalKm = 0, totalSecs = 0, totalCal = 0, maxKm = 0;
+    var dates = [];
+    runs.forEach(function (r) {
+      totalKm += r.km; totalSecs += r.secs; totalCal += r.cal;
+      if (r.km > maxKm) maxKm = r.km;
+      dates.push(r.dateStr);
+    });
+    dates = dates.slice().sort();
+    var best = 1, cur = 1;
+    for (var i = 1; i < dates.length; i++) {
+      var diff = (new Date(dates[i]) - new Date(dates[i - 1])) / 86400000;
+      cur = (diff === 1) ? cur + 1 : 1;
+      if (cur > best) best = cur;
+    }
+    var cards = [
+      { num: totalKm.toFixed(0), unit: 'km', label: '累计里程' },
+      { num: runs.length, unit: '次', label: '出勤' },
+      { num: Math.round(totalCal), unit: 'kcal', label: '总消耗' },
+      { num: paceText(totalSecs / totalKm), unit: '/km', label: '平均配速' },
+      { num: maxKm.toFixed(1), unit: 'km', label: '最长单次' },
+      { num: best, unit: '天', label: '最长连续' }
+    ];
+    var grid = document.getElementById('ex-stat-grid');
+    grid.innerHTML = '';
+    cards.forEach(function (c) {
+      var div = document.createElement('div');
+      div.className = 'ex-stat-card';
+      div.innerHTML = '<div class="ex-stat-num">' + c.num + '<small>' + c.unit + '</small></div>' +
+        '<div class="ex-stat-label">' + c.label + '</div>';
+      grid.appendChild(div);
+    });
+  }
+
+  function monthlyData(runs) {
+    var last = runs[runs.length - 1].d;
+    var months = [];
+    for (var i = 11; i >= 0; i--) {
+      var d = new Date(last.getFullYear(), last.getMonth() - i, 1);
+      months.push({
+        key: d.getFullYear() + '-' + pad2(d.getMonth() + 1),
+        label: (d.getMonth() + 1) + '月',
+        km: 0, count: 0
+      });
+    }
+    runs.forEach(function (r) {
+      var key = r.d.getFullYear() + '-' + pad2(r.d.getMonth() + 1);
+      var m = null;
+      for (var i = 0; i < months.length; i++) if (months[i].key === key) m = months[i];
+      if (m) { m.km += r.km; m.count++; }
+    });
+    months.forEach(function (m) { m.km = Math.round(m.km * 10) / 10; });
+    return months;
+  }
+
+  function drawMonthly(el, months) {
+    var W = 640, H = 210, padL = 42, padR = 8, padT = 18, padB = 26;
+    var innerW = W - padL - padR, innerH = H - padT - padB;
+    var maxKm = 1;
+    months.forEach(function (m) { if (m.km > maxKm) maxKm = m.km; });
+    var svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, 'class': 'ex-svg' });
+    for (var g = 0; g <= 4; g++) {
+      var gy = padT + innerH - innerH * g / 4;
+      svg.appendChild(svgEl('line', { x1: padL, x2: W - padR, y1: gy, y2: gy, 'class': 'ex-svg-line' }));
+      label(svg, padL - 6, gy + 4, Math.round(maxKm * g / 4), 'end');
+    }
+    var bw = innerW / months.length;
+    months.forEach(function (m, i) {
+      var h = innerH * m.km / maxKm;
+      var x = padL + i * bw + bw * 0.18;
+      svg.appendChild(svgEl('rect', {
+        x: x, y: padT + innerH - h, width: bw * 0.64, height: Math.max(h, 1),
+        rx: 3, fill: 'var(--text-highlight-color)', opacity: 0.85
+      }));
+      if (m.count) label(svg, x + bw * 0.32, padT + innerH - h - 5, m.count, 'middle');
+      label(svg, padL + i * bw + bw / 2, H - 8, m.label, 'middle');
+    });
+    el.innerHTML = '';
+    el.appendChild(svg);
+  }
+
+  function drawPace(el, runs) {
+    if (runs.length < 2) { el.innerHTML = '<div class="ex-msg">数据不足</div>'; return; }
+    var W = 640, H = 210, padL = 48, padR = 14, padT = 18, padB = 26;
+    var innerW = W - padL - padR, innerH = H - padT - padB;
+    var paces = runs.map(function (r) { return r.pace; });
+    var minP = Math.min.apply(null, paces), maxP = Math.max.apply(null, paces);
+    var span = Math.max(maxP - minP, 30);
+    var lo = minP - span * 0.15, hi = maxP + span * 0.15;
+    function x(i) { return padL + innerW * i / (runs.length - 1); }
+    function y(p) { return padT + innerH * (1 - (p - lo) / (hi - lo)); }
+    var svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, 'class': 'ex-svg' });
+    [0, 0.5, 1].forEach(function (f) {
+      var pv = lo + (hi - lo) * (1 - f);
+      var gy = padT + innerH * f;
+      svg.appendChild(svgEl('line', { x1: padL, x2: W - padR, y1: gy, y2: gy, 'class': 'ex-svg-line' }));
+      label(svg, padL - 6, gy + 4, paceText(pv), 'end');
+    });
+    var pts = runs.map(function (r, i) { return x(i).toFixed(1) + ',' + y(r.pace).toFixed(1); });
+    svg.appendChild(svgEl('polyline', {
+      points: pts.join(' '), fill: 'none',
+      stroke: 'var(--text-highlight-color)', 'stroke-width': 2, opacity: 0.75,
+      'stroke-linejoin': 'round', 'stroke-linecap': 'round'
+    }));
+    runs.forEach(function (r, i) {
+      svg.appendChild(svgEl('circle', {
+        cx: x(i).toFixed(1), cy: y(r.pace).toFixed(1), r: 3.2,
+        fill: 'var(--background-card-color)', stroke: 'var(--text-highlight-color)', 'stroke-width': 1.6
+      }));
+    });
+    label(svg, padL, H - 8, runs[0].dateStr, 'start');
+    label(svg, W - padR, H - 8, runs[runs.length - 1].dateStr, 'end');
+    el.innerHTML = '';
+    el.appendChild(svg);
+  }
+
+  function drawWeekday(el, runs) {
+    var names = ['一', '二', '三', '四', '五', '六', '日'];
+    var order = [1, 2, 3, 4, 5, 6, 0];
+    var counts = [0, 0, 0, 0, 0, 0, 0];
+    var km = [0, 0, 0, 0, 0, 0, 0];
+    runs.forEach(function (r) {
+      var w = r.d.getDay();
+      var idx = order.indexOf(w);
+      counts[idx]++; km[idx] += r.km;
+    });
+    var W = 640, H = 190, padL = 42, padR = 8, padT = 16, padB = 26;
+    var innerW = W - padL - padR, innerH = H - padT - padB;
+    var maxC = Math.max.apply(null, counts.concat([1]));
+    var svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, 'class': 'ex-svg' });
+    var bw = innerW / 7;
+    counts.forEach(function (c, i) {
+      var h = innerH * c / maxC;
+      var x = padL + i * bw + bw * 0.2;
+      svg.appendChild(svgEl('rect', {
+        x: x, y: padT + innerH - h, width: bw * 0.6, height: Math.max(h, 1),
+        rx: 4, fill: 'var(--text-highlight-color)', opacity: i >= 5 ? 0.95 : 0.6
+      }));
+      label(svg, x + bw * 0.3, padT + innerH - h - 5, c, 'middle');
+      label(svg, padL + i * bw + bw / 2, H - 8, '周' + names[i], 'middle');
+    });
+    el.innerHTML = '';
+    el.appendChild(svg);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>

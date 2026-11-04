@@ -79,7 +79,10 @@
       </div>
     </div>
     <div class="bento-calendar-board" id="calendar-board-container"></div>
-  </div>  
+  </div>
+
+  {{ partial "exercise-analytics.html" . }}
+
       <div class="cardList" id="run-list">
         {{ range $index, $run := $sortedActivities }}
           {{ $y := substr .start_date_local 0 4 }}
