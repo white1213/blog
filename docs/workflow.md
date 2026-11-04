@@ -141,6 +141,19 @@ my-jingzhe/
 
 ### 写文章
 
+**方式一：网页写作（推荐日常）**
+
+打开 <https://white1213.github.io/blog/write/>：
+
+1. 首次进入粘贴 GitHub Token（`github_pat_...`，只存在本机浏览器）
+2. 选「写随笔」或「发唠叨」
+3. 写内容，右侧实时预览
+4. 点「发布」→ 自动提交到仓库 → 1–2 分钟上线
+
+写作页直接调用 GitHub API，不经过任何第三方服务器。Token 需要 `white1213/blog` 仓库的 **Contents: Read and write** 权限；失效了去 GitHub 重新生成即可。
+
+**方式二：手动写 Markdown**
+
 1. 在 `content/posts/` 新建 `xxx.md`
 2. 开头写 front matter：
 
