@@ -94,25 +94,34 @@
 
 .pl-song {
   display: grid;
-  grid-template-columns: 32px 40px minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr) 52px;
-  gap: 12px;
+  grid-template-columns: 34px 50px minmax(0, 1.6fr) minmax(0, 1fr) 54px;
+  gap: 16px;
   align-items: center;
-  padding: 8px 10px;
-  border-radius: 8px;
-  font-size: 0.88rem;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 0.94rem;
   transition: background-color 0.15s ease;
+}
+
+/* 歌名 + 歌手上下堆叠 */
+.pl-main {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
 }
 
 /* 单曲专辑封面 */
 .pl-scover {
-  width: 40px;
-  height: 40px;
-  border-radius: 6px;
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: rgba(120, 110, 90, 0.12);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
 }
 
 .pl-scover img {
@@ -145,9 +154,11 @@
 
 .pl-title {
   min-width: 0;
+  display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  line-height: 1.35;
 }
 
 .pl-title a {
@@ -160,14 +171,23 @@
   text-decoration: underline;
 }
 
-.pl-artist,
+.pl-artist {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-info-color);
+  font-size: 0.79rem;
+  line-height: 1.3;
+}
+
 .pl-album {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--text-info-color);
-  font-size: 0.82rem;
+  font-size: 0.84rem;
 }
 
 .pl-time {
@@ -232,15 +252,15 @@
   }
 
   .pl-song {
-    grid-template-columns: 22px 34px minmax(0, 1.6fr) minmax(0, 1fr) 44px;
-    gap: 8px;
+    grid-template-columns: 22px 42px minmax(0, 1fr) 44px;
+    gap: 10px;
     padding: 7px 4px;
-    font-size: 0.84rem;
+    font-size: 0.9rem;
   }
 
   .pl-scover {
-    width: 34px;
-    height: 34px;
+    width: 42px;
+    height: 42px;
   }
 
   .pl-album {

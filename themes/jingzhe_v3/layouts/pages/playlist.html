@@ -44,12 +44,14 @@
         <span class="pl-scover-empty" aria-hidden="true">♪</span>
         {{ end }}
       </span>
-      <span class="pl-title">
-        {{ if $song.songmid }}
-        <a href="https://y.qq.com/n/ryqq/songDetail/{{ $song.songmid }}" target="_blank" rel="noopener">{{ $song.name }}</a>
-        {{ else }}{{ $song.name }}{{ end }}
+      <span class="pl-main">
+        <span class="pl-title">
+          {{ if $song.songmid }}
+          <a href="https://y.qq.com/n/ryqq/songDetail/{{ $song.songmid }}" target="_blank" rel="noopener">{{ $song.name }}</a>
+          {{ else }}{{ $song.name }}{{ end }}
+        </span>
+        <span class="pl-artist">{{ $song.singers }}</span>
       </span>
-      <span class="pl-artist">{{ $song.singers }}</span>
       <span class="pl-album">{{ $song.album }}</span>
       <span class="pl-time">{{ $secs := int (mod (int $song.interval) 60) }}{{ $mins := int (div (int $song.interval) 60) }}{{ printf "%d:%02d" $mins $secs }}</span>
     </li>
