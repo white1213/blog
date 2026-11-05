@@ -735,30 +735,63 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
     });
   }
 
-  // 压缩:最长边 1600px,优先 WebP(支持透明),压缩后仍比原图大则用原图
-  function compressImage(file) {
-    return createImageBitmap(file).then(function (bmp) {
-      var maxDim = 1600;
-      var scale = Math.min(1, maxDim / Math.max(bmp.width, bmp.height));
-      var cw = Math.round(bmp.width * scale);
-      var ch = Math.round(bmp.height * scale);
-      var canvas = document.createElement('canvas');
-      canvas.width = cw;
-      canvas.height = ch;
-      var ctx = canvas.getContext('2d');
-      ctx.drawImage(bmp, 0, 0, cw, ch);
-      return new Promise(function (resolve) {
-        canvas.toBlob(function (blob) {
-          if (!blob || (blob.size > file.size && file.size < 900 * 1024)) {
-            resolve({ blob: file, ext: extOf(file) });
-          } else {
-            resolve({ blob: blob, ext: 'webp' });
-          }
-        }, 'image/webp', 0.86);
-      });
-    }).catch(function () {
+  // 自适应压缩:质量优先
+  // 1) 小图(<300KB 且尺寸不大)原样上传,零画质损失
+  // 2) 最长边 1800px(博客正文最宽约 800px,2 倍屏也够清晰)
+  // 3) 质量从 0.95 起,尽量不低于 0.82;实在超限才继续缩尺寸
+  function toBlob(canvas, type, quality) {
+    return new Promise(function (resolve) { canvas.toBlob(resolve, type, quality); });
+  }
+
+  async function compressImage(file) {
+    var MAX_DIM = 1800;
+    var TARGET = 900 * 1024;
+    var bmp = null;
+    try {
+      bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
+    } catch (e) {
       return { blob: file, ext: extOf(file) };
-    });
+    }
+
+    var w = bmp.width, h = bmp.height;
+
+    // 已经很小且尺寸不大 → 直接原图,不做任何重编码
+    if (file.size <= 300 * 1024 && Math.max(w, h) <= MAX_DIM && /^image\/(jpeg|webp|png|gif)$/.test(file.type)) {
+      return { blob: file, ext: extOf(file) };
+    }
+
+    var scale = Math.min(1, MAX_DIM / Math.max(w, h));
+    var cw = Math.round(w * scale), ch = Math.round(h * scale);
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+    var qualities = [0.95, 0.93, 0.91, 0.89, 0.87, 0.85, 0.82];
+
+    canvas.width = cw;
+    canvas.height = ch;
+    ctx.clearRect(0, 0, cw, ch);
+    ctx.drawImage(bmp, 0, 0, cw, ch);
+
+    for (var i = 0; i < qualities.length; i++) {
+      var blob = await toBlob(canvas, 'image/webp', qualities[i]);
+      if (!blob) continue;
+      if (blob.size <= TARGET) {
+        // 重编码比原图还大 → 保留原图
+        if (blob.size >= file.size && file.size <= TARGET) {
+          return { blob: file, ext: extOf(file) };
+        }
+        return { blob: blob, ext: 'webp', quality: qualities[i], width: cw, height: ch };
+      }
+    }
+
+    // 0.82 仍超限(极少见):缩 15% 后重试一次
+    cw = Math.round(cw * 0.85);
+    ch = Math.round(ch * 0.85);
+    canvas.width = cw;
+    canvas.height = ch;
+    ctx.clearRect(0, 0, cw, ch);
+    ctx.drawImage(bmp, 0, 0, cw, ch);
+    var last = await toBlob(canvas, 'image/webp', 0.82);
+    return last ? { blob: last, ext: 'webp', quality: 0.82, width: cw, height: ch } : { blob: file, ext: extOf(file) };
   }
 
   function insertAtCursor(el, text) {
@@ -795,19 +828,28 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
       body: JSON.stringify({ message: '上传图片 ' + name, content: b64, branch: BRANCH })
     });
     if (!res.ok) throw new Error('上传失败：' + (await res.json()).message);
-    return BASE_PATH.replace(/\/$/, '') + '/uploads/' + now.getFullYear() + '-' + pad2(now.getMonth() + 1) + '/' + name;
+    return {
+      url: BASE_PATH.replace(/\/$/, '') + '/uploads/' + now.getFullYear() + '-' + pad2(now.getMonth() + 1) + '/' + name,
+      kb: Math.round(packed.blob.size / 1024),
+      quality: packed.quality,
+      width: packed.width,
+      height: packed.height
+    };
   }
 
   async function handleImage(file) {
     var st = $('wr-status');
     try {
-      var url = await uploadImage(file);
+      var info = await uploadImage(file);
       var alt = String(file.name || '图片').replace(/\.[^.]+$/, '');
-      insertAtCursor($('wr-body'), '\n![' + alt + '](' + url + ')\n');
+      insertAtCursor($('wr-body'), '\n![' + alt + '](' + info.url + ')\n');
       var cover = $('wr-cover');
       var coverFilled = false;
-      if (cover && !cover.value.trim()) { cover.value = url; coverFilled = true; }
-      setStatus(st, '图片已插入' + (coverFilled ? '，并设为封面' : '') + '，1–2 分钟后上线', 'ok');
+      if (cover && !cover.value.trim()) { cover.value = info.url; coverFilled = true; }
+      var detail = info.kb + 'KB';
+      if (info.quality) detail += ' · q' + Math.round(info.quality * 100) + ' · ' + info.width + '×' + info.height;
+      else detail += ' · 原图未压缩';
+      setStatus(st, '图片已插入（' + detail + '）' + (coverFilled ? '，并设为封面' : ''), 'ok');
     } catch (e) {
       setStatus(st, e.message, 'err');
     }
