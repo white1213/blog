@@ -79,3 +79,11 @@ RSSNoContent = false
 
 [about]
   photos = []
+
+[writer]
+  # 写作页插图:最长边像素上限。正文最宽 800px,1400 足够 1.75 倍屏清晰
+  imageMaxDim = 1400
+  # 压缩目标上限(KB),超过才继续降质量
+  imageTargetKB = 350
+  # 质量下限,低于此值宁可缩尺寸也不降质
+  imageMinQuality = 0.73
