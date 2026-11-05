@@ -25,6 +25,8 @@
       </div>
       <div class="wr-right">
         <span id="wr-user" class="wr-msg"></span>
+        <label class="wr-btn wr-btn-ghost wr-upload" for="wr-img">🖼 插入图片</label>
+        <input id="wr-img" type="file" accept="image/*" hidden>
         <label class="wr-btn wr-btn-ghost wr-upload" for="wr-file">📄 导入 .md</label>
         <input id="wr-file" type="file" accept=".md,.markdown,.txt,text/markdown" hidden>
         <button id="wr-logout" class="wr-btn wr-btn-ghost" type="button">换 Token</button>
@@ -60,6 +62,10 @@
       <div class="wr-field">
         <label for="wr-desc">摘要（可选）</label>
         <input id="wr-desc" class="wr-input" placeholder="一句话摘要">
+      </div>
+      <div class="wr-field">
+        <label for="wr-cover">封面图（可选，粘贴图片地址或上传后自动填入）</label>
+        <input id="wr-cover" class="wr-input" placeholder="/blog/uploads/2026-11/xxx.webp">
       </div>
     </div>
 
@@ -210,6 +216,7 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
   var OWNER = {{ $repo.owner | jsonify | safeJS }};
   var REPO = {{ $repo.name | jsonify | safeJS }};
   var BRANCH = {{ $repo.branch | default "main" | jsonify | safeJS }};
+  var BASE_PATH = {{ (relURL "") | jsonify | safeJS }};
   var KEY = 'jingzhe_gh_token';
   var DRAFT_KEY = 'jingzhe_draft_v1';
 
@@ -290,7 +297,7 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
       localStorage.setItem(DRAFT_KEY, JSON.stringify({
         mode: state.mode === 'manage' ? 'post' : state.mode,
         title: $('wr-title').value, slug: $('wr-slug').value,
-        tags: $('wr-tags').value, desc: $('wr-desc').value, body: $('wr-body').value
+        tags: $('wr-tags').value, desc: $('wr-desc').value, cover: $('wr-cover').value, body: $('wr-body').value
       }));
     } catch (e) {}
   }
@@ -300,6 +307,7 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
       if (!d) return;
       $('wr-title').value = d.title || ''; $('wr-slug').value = d.slug || '';
       $('wr-tags').value = d.tags || ''; $('wr-desc').value = d.desc || '';
+      $('wr-cover').value = d.cover || '';
       $('wr-body').value = d.body || '';
       if (d.mode && d.mode !== 'manage') setMode(d.mode);
       refreshPreview();
@@ -342,6 +350,7 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
       if (!title) { setStatus(status, '请填写标题', 'err'); return; }
       var tags = $('wr-tags').value.split(/[,，]/).map(function (s) { return s.trim(); }).filter(Boolean);
       var desc = $('wr-desc').value.trim();
+      var cover = ($('wr-cover').value || '').trim();
       if (editing && editing.mode === 'post') {
         // 编辑模式:保留原日期等字段,仅更新标题/摘要/标签
         var fmLines = editing.fmLines.slice();
@@ -352,6 +361,7 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
         setLine('title', JSON.stringify(title));
         setLine('description', JSON.stringify(desc));
         setLine('tags', tags.length ? '[' + tags.map(function (s) { return JSON.stringify(s); }).join(', ') + ']' : '[]');
+        if (cover) setLine('image', JSON.stringify(cover));
         content = '---\n' + fmLines.join('\n') + '\n---\n\n' + body + '\n';
         path = editing.path;
         message = '更新文章：' + title;
@@ -365,6 +375,7 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
         setImp('title', JSON.stringify(title));
         if (desc) setImp('description', JSON.stringify(desc));
         setImp('tags', tags.length ? '[' + tags.map(function (s) { return JSON.stringify(s); }).join(', ') + ']' : '[]');
+        if (cover) setImp('image', JSON.stringify(cover));
         content = '---\n' + fmImp.join('\n') + '\n---\n\n' + body + '\n';
         var impSlug = slugify($('wr-slug').value.trim()) || slugify(title) || ('post-' + Date.now());
         path = 'content/posts/' + impSlug + '.md';
@@ -374,6 +385,7 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
         var fm = '---\ntitle: ' + JSON.stringify(title) + '\ndate: ' + t + '\n';
         if (desc) fm += 'description: ' + JSON.stringify(desc) + '\n';
         if (tags.length) fm += 'tags: [' + tags.map(function (s) { return JSON.stringify(s); }).join(', ') + ']\n';
+        if (cover) fm += 'image: ' + JSON.stringify(cover) + '\n';
         fm += '---\n\n';
         path = 'content/posts/' + slug + '.md';
         content = fm + body + '\n';
@@ -613,6 +625,7 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
         $('wr-slug').value = file.name.replace(/\.md$/, '');
         $('wr-tags').value = tg;
         $('wr-desc').value = getFm('description').replace(/^['"]|['"]$/g, '');
+        $('wr-cover').value = unquote(getFm('image'));
       }
       $('wr-body').value = body.trim();
       refreshPreview();
@@ -636,7 +649,7 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
   }
   function cancelEdit() {
     cancelEditSilent();
-    $('wr-title').value = ''; $('wr-slug').value = ''; $('wr-tags').value = ''; $('wr-desc').value = ''; $('wr-body').value = '';
+    $('wr-title').value = ''; $('wr-slug').value = ''; $('wr-tags').value = ''; $('wr-desc').value = ''; $('wr-cover').value = ''; $('wr-body').value = '';
     refreshPreview();
     setStatus($('wr-status'), '已退出编辑模式');
   }
@@ -684,6 +697,7 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
       $('wr-slug').value = file.name.replace(/\.(md|markdown|txt)$/i, '');
       $('wr-tags').value = parseTagValue(fm.get('tags')).join(', ');
       $('wr-desc').value = unquote(fm.get('description'));
+      $('wr-cover').value = unquote(fm.get('image'));
       $('wr-body').value = fm.body.replace(/^\s+/, '');
       refreshPreview();
       document.getElementById('wr-editor').scrollIntoView();
@@ -698,6 +712,105 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
     $('wr-imported').hidden = true;
     $('wr-imported-name').textContent = '';
     $('wr-file').value = '';
+  }
+
+  function extOf(file) {
+    var m = String(file.name || '').match(/\.([a-z0-9]+)$/i);
+    return m ? m[1].toLowerCase() : 'jpg';
+  }
+  function blobToB64(blob) {
+    return new Promise(function (resolve, reject) {
+      var r = new FileReader();
+      r.onload = function () {
+        var bytes = new Uint8Array(r.result);
+        var bin = '';
+        var chunk = 8000;
+        for (var i = 0; i < bytes.length; i += chunk) {
+          bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+        }
+        resolve(btoa(bin));
+      };
+      r.onerror = reject;
+      r.readAsArrayBuffer(blob);
+    });
+  }
+
+  // 压缩:最长边 1600px,优先 WebP(支持透明),压缩后仍比原图大则用原图
+  function compressImage(file) {
+    return createImageBitmap(file).then(function (bmp) {
+      var maxDim = 1600;
+      var scale = Math.min(1, maxDim / Math.max(bmp.width, bmp.height));
+      var cw = Math.round(bmp.width * scale);
+      var ch = Math.round(bmp.height * scale);
+      var canvas = document.createElement('canvas');
+      canvas.width = cw;
+      canvas.height = ch;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(bmp, 0, 0, cw, ch);
+      return new Promise(function (resolve) {
+        canvas.toBlob(function (blob) {
+          if (!blob || (blob.size > file.size && file.size < 900 * 1024)) {
+            resolve({ blob: file, ext: extOf(file) });
+          } else {
+            resolve({ blob: blob, ext: 'webp' });
+          }
+        }, 'image/webp', 0.86);
+      });
+    }).catch(function () {
+      return { blob: file, ext: extOf(file) };
+    });
+  }
+
+  function insertAtCursor(el, text) {
+    var start = el.selectionStart || 0;
+    var end = el.selectionEnd || 0;
+    var before = el.value.slice(0, start);
+    var after = el.value.slice(end);
+    el.value = before + text + after;
+    var pos = start + text.length;
+    el.selectionStart = el.selectionEnd = pos;
+    el.focus();
+    refreshPreview();
+    saveDraftLocal();
+  }
+
+  async function uploadImage(file) {
+    var st = $('wr-status');
+    if (!file || !/^image\//.test(file.type)) throw new Error('不是图片文件');
+    if (file.size > 12 * 1024 * 1024) throw new Error('图片太大（超过 12MB）');
+    setStatus(st, '压缩中…');
+    var packed = await compressImage(file);
+    if (packed.blob.size > 950 * 1024) {
+      throw new Error('压缩后仍有 ' + Math.round(packed.blob.size / 1024) + 'KB，超过 950KB 限制，请先裁剪');
+    }
+    var now = new Date();
+    var dir = 'static/uploads/' + now.getFullYear() + '-' + pad2(now.getMonth() + 1);
+    var name = now.getTime().toString(36) + '-' + Math.random().toString(36).slice(2, 7) + '.' + packed.ext;
+    var path = dir + '/' + name;
+    setStatus(st, '上传中（' + Math.round(packed.blob.size / 1024) + 'KB）…');
+    var b64 = await blobToB64(packed.blob);
+    var res = await fetch('https://api.github.com/repos/' + OWNER + '/' + REPO + '/contents/' + pathEncode(path), {
+      method: 'PUT',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, headers()),
+      body: JSON.stringify({ message: '上传图片 ' + name, content: b64, branch: BRANCH })
+    });
+    if (!res.ok) throw new Error('上传失败：' + (await res.json()).message);
+    return BASE_PATH.replace(/\/$/, '') + '/uploads/' + now.getFullYear() + '-' + pad2(now.getMonth() + 1) + '/' + name;
+  }
+
+  async function handleImage(file) {
+    var st = $('wr-status');
+    try {
+      var url = await uploadImage(file);
+      var alt = String(file.name || '图片').replace(/\.[^.]+$/, '');
+      insertAtCursor($('wr-body'), '\n![' + alt + '](' + url + ')\n');
+      var cover = $('wr-cover');
+      var coverFilled = false;
+      if (cover && !cover.value.trim()) { cover.value = url; coverFilled = true; }
+      setStatus(st, '图片已插入' + (coverFilled ? '，并设为封面' : '') + '，1–2 分钟后上线', 'ok');
+    } catch (e) {
+      setStatus(st, e.message, 'err');
+    }
   }
 
   function showEditor() {    $('wr-login').hidden = true;
@@ -770,9 +883,16 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
         e.preventDefault();
         editorArea.classList.remove('is-drag');
         var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-        if (f) handleFile(f);
+        if (!f) return;
+        if (/^image\//.test(f.type)) handleImage(f);
+        else handleFile(f);
       });
     }
+    $('wr-img').addEventListener('change', function (e) {
+      var f = e.target.files && e.target.files[0];
+      e.target.value = '';
+      if (f) handleImage(f);
+    });
     $('wr-draft').addEventListener('click', function () {
       saveDraftLocal(); setStatus($('wr-status'), '草稿已存在本机（未发布）', 'ok');
     });
