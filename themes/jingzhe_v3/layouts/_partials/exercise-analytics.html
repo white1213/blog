@@ -273,7 +273,7 @@
     var pct = Math.min(100, Math.round(yearKm / goal * 100));
     document.getElementById('ex-goal-fill').style.width = pct + '%';
     document.getElementById('ex-goal-pct').textContent = pct + '%';
-    document.getElementById('ex-goal-remain').textContent = (yearKm / goal * 100).toFixed(1) + ' / ' + goal +
+    document.getElementById('ex-goal-remain').textContent = yearKm.toFixed(1) + ' / ' + goal +
       ' km' + (pct >= 100 ? ' · 🎉 目标达成！' : ' · 还差 ' + (goal - yearKm).toFixed(1) + ' km');
   }
 
