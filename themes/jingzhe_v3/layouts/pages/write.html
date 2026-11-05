@@ -25,6 +25,8 @@
       </div>
       <div class="wr-right">
         <span id="wr-user" class="wr-msg"></span>
+        <label class="wr-btn wr-btn-ghost wr-upload" for="wr-file">📄 导入 .md</label>
+        <input id="wr-file" type="file" accept=".md,.markdown,.txt,text/markdown" hidden>
         <button id="wr-logout" class="wr-btn wr-btn-ghost" type="button">换 Token</button>
       </div>
     </div>
@@ -32,6 +34,12 @@
     <div id="wr-editing" class="wr-editing" hidden>
       ✏️ 正在编辑：<span id="wr-editing-path"></span>
       <button id="wr-cancel-edit" class="wr-btn wr-btn-ghost" type="button">取消编辑</button>
+    </div>
+
+    <div id="wr-imported" class="wr-editing" hidden>
+      📄 已导入：<span id="wr-imported-name"></span>
+      <span class="wr-import-hint">确认标题和内容后点「发布」</span>
+      <button id="wr-clear-import" class="wr-btn wr-btn-ghost" type="button">清除</button>
     </div>
 
     <div id="wr-post-fields" class="wr-fields">
@@ -187,6 +195,9 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
 .wr-edit { appearance: none; border: 1px solid rgba(120, 110, 90, 0.4); color: var(--text-content-color); background: transparent; border-radius: 6px; padding: 4px 10px; font: inherit; font-size: 0.78rem; cursor: pointer; flex-shrink: 0; }
 .wr-edit:hover { background: rgba(120, 110, 90, 0.1); }
 .wr-editing { background: rgba(120, 110, 90, 0.1); border: 1px dashed rgba(120, 110, 90, 0.4); border-radius: 8px; padding: 8px 12px; font-size: 0.8rem; color: var(--text-info-color); margin-bottom: 14px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.wr-upload { cursor: pointer; }
+.wr-import-hint { opacity: .75; }
+.wr-editor-area.is-drag { outline: 2px dashed var(--text-highlight-color); outline-offset: 4px; border-radius: 10px; }
 @media (max-width: 760px) {
   .wr-editor-area { grid-template-columns: 1fr; }
   .wr-grid2 { grid-template-columns: 1fr; }
@@ -203,7 +214,7 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
   var DRAFT_KEY = 'jingzhe_draft_v1';
 
   var $ = function (id) { return document.getElementById(id); };
-  var state = { token: '', mode: 'post', editing: null };
+  var state = { token: '', mode: 'post', editing: null, imported: null };
 
   function headers() {
     return { 'Authorization': 'Bearer ' + state.token, 'Accept': 'application/vnd.github+json' };
@@ -299,6 +310,7 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
     state.mode = mode;
     state.editing = null;
     $('wr-editing').hidden = true;
+    if (mode !== 'post') clearImport();
     document.querySelectorAll('.wr-tab').forEach(function (b) {
       b.classList.toggle('is-active', b.dataset.mode === mode);
     });
@@ -343,6 +355,20 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
         content = '---\n' + fmLines.join('\n') + '\n---\n\n' + body + '\n';
         path = editing.path;
         message = '更新文章：' + title;
+      } else if (state.imported) {
+        // 导入模式:沿用原 front matter(保留原日期等),仅覆盖标题/摘要/标签
+        var fmImp = state.imported.fmLines.slice();
+        var setImp = function (k, v) {
+          for (var i = 0; i < fmImp.length; i++) if (fmImp[i].indexOf(k + ':') === 0) { fmImp[i] = k + ': ' + v; return; }
+          fmImp.push(k + ': ' + v);
+        };
+        setImp('title', JSON.stringify(title));
+        if (desc) setImp('description', JSON.stringify(desc));
+        setImp('tags', tags.length ? '[' + tags.map(function (s) { return JSON.stringify(s); }).join(', ') + ']' : '[]');
+        content = '---\n' + fmImp.join('\n') + '\n---\n\n' + body + '\n';
+        var impSlug = slugify($('wr-slug').value.trim()) || slugify(title) || ('post-' + Date.now());
+        path = 'content/posts/' + impSlug + '.md';
+        message = '导入文章：' + title;
       } else {
         var slug = slugify($('wr-slug').value.trim() || title) || ('post-' + Date.now());
         var fm = '---\ntitle: ' + JSON.stringify(title) + '\ndate: ' + t + '\n';
@@ -379,6 +405,7 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
       }, 0);
       if (!editing) localStorage.removeItem(DRAFT_KEY);
       cancelEditSilent();
+      clearImport();
     } catch (e) {
       setStatus(status, e.message, 'err');
     } finally {
@@ -614,6 +641,65 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
     setStatus($('wr-status'), '已退出编辑模式');
   }
 
+  function parseFrontMatter(text) {
+    var m = text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+    var fmLines = m ? m[1].split(/\r?\n/) : [];
+    var body = m ? m[2] : text;
+    var get = function (k) {
+      for (var i = 0; i < fmLines.length; i++) {
+        var mm = fmLines[i].match(new RegExp('^' + k + ':\\s*(.*)$'));
+        if (mm) return mm[1].trim();
+      }
+      return '';
+    };
+    return { fmLines: fmLines, body: body, get: get };
+  }
+  function unquote(s) { return s.replace(/^['"]|['"]$/g, ''); }
+  function parseTagValue(raw) {
+    var v = raw.trim();
+    if (!v) return [];
+    if (v.charAt(0) === '[') {
+      try {
+        return JSON.parse(v).map(function (s) { return String(s); });
+      } catch (e) { return v.replace(/^\[|\]$/g, '').split(',').map(function (s) { return unquote(s.trim()); }); }
+    }
+    return v.split(',').map(function (s) { return unquote(s.trim()); }).filter(Boolean);
+  }
+
+  function handleFile(file) {
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      setStatus($('wr-status'), '文件太大（超过 2MB）', 'err');
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function () {
+      var text = String(reader.result || '');
+      var fm = parseFrontMatter(text);
+      setMode('post');
+      state.imported = { fileName: file.name, fmLines: fm.fmLines };
+      $('wr-imported').hidden = false;
+      $('wr-imported-name').textContent = file.name;
+      $('wr-title').value = unquote(fm.get('title'));
+      $('wr-slug').value = file.name.replace(/\.(md|markdown|txt)$/i, '');
+      $('wr-tags').value = parseTagValue(fm.get('tags')).join(', ');
+      $('wr-desc').value = unquote(fm.get('description'));
+      $('wr-body').value = fm.body.replace(/^\s+/, '');
+      refreshPreview();
+      document.getElementById('wr-editor').scrollIntoView();
+      setStatus($('wr-status'), '已导入，确认后点「发布」', 'ok');
+    };
+    reader.onerror = function () { setStatus($('wr-status'), '文件读取失败', 'err'); };
+    reader.readAsText(file, 'utf-8');
+  }
+
+  function clearImport() {
+    state.imported = null;
+    $('wr-imported').hidden = true;
+    $('wr-imported-name').textContent = '';
+    $('wr-file').value = '';
+  }
+
   function showEditor() {    $('wr-login').hidden = true;
     $('wr-editor').hidden = false;
     $('wr-user').textContent = '已连接 ' + OWNER + '/' + REPO;
@@ -664,6 +750,29 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
     $('wr-publish').addEventListener('click', publish);
     $('wr-ex-publish').addEventListener('click', submitExercise);
     $('wr-cancel-edit').addEventListener('click', cancelEdit);
+    $('wr-file').addEventListener('change', function (e) {
+      handleFile(e.target.files && e.target.files[0]);
+    });
+    $('wr-clear-import').addEventListener('click', function () {
+      clearImport();
+      setStatus($('wr-status'), '已清除导入');
+    });
+    var editorArea = document.querySelector('.wr-editor-area');
+    if (editorArea) {
+      editorArea.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        editorArea.classList.add('is-drag');
+      });
+      editorArea.addEventListener('dragleave', function () {
+        editorArea.classList.remove('is-drag');
+      });
+      editorArea.addEventListener('drop', function (e) {
+        e.preventDefault();
+        editorArea.classList.remove('is-drag');
+        var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        if (f) handleFile(f);
+      });
+    }
     $('wr-draft').addEventListener('click', function () {
       saveDraftLocal(); setStatus($('wr-status'), '草稿已存在本机（未发布）', 'ok');
     });
