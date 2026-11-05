@@ -1,12 +1,27 @@
 <div class="ex-analytics" id="ex-analytics">
+  {{ $goalKm := int (default 0 (index site.Params.services.exercise "goalkm")) }}
   <div class="ex-analytics-head">
     <h2 class="ex-analytics-title">数据分析</h2>
     <span class="ex-analytics-sub">基于全部运动记录自动生成</span>
   </div>
+  {{ if gt $goalKm 0 }}
+  <div class="ex-goal-card">
+    <div class="ex-goal-row">
+      <span class="ex-goal-label">{{ now.Year }} 年度目标</span>
+      <span class="ex-goal-pct" id="ex-goal-pct">—</span>
+    </div>
+    <div class="ex-goal-bar"><div class="ex-goal-fill" id="ex-goal-fill"></div></div>
+    <div class="ex-goal-remain" id="ex-goal-remain"></div>
+  </div>
+  {{ end }}
   <div class="ex-stat-grid" id="ex-stat-grid"></div>
   <div class="ex-chart-card">
     <div class="ex-chart-title">月跑量（近 12 个月，柱上数字为当月次数）</div>
     <div id="ex-chart-monthly"></div>
+  </div>
+  <div class="ex-chart-card">
+    <div class="ex-chart-title">累计里程</div>
+    <div id="ex-chart-cumulative"></div>
   </div>
   <div class="ex-chart-card">
     <div class="ex-chart-title">配速趋势（点越低 = 配速越快）</div>
@@ -33,6 +48,14 @@
 .ex-svg { width: 100%; height: auto; display: block; }
 .ex-svg-label { font-size: 10px; fill: var(--text-info-color); }
 .ex-svg-line { stroke: rgba(128, 128, 128, 0.18); stroke-width: 1; }
+.ex-goal-card { background: var(--background-card-color); border: 1px solid rgba(120, 110, 90, 0.16); border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+.ex-goal-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+.ex-goal-label { font-size: 0.86rem; font-weight: 600; }
+.ex-goal-pct { font-size: 1.05rem; font-weight: 700; color: var(--text-highlight-color); }
+.ex-goal-bar { height: 12px; border-radius: 999px; background: rgba(120, 110, 90, 0.14); overflow: hidden; }
+.ex-goal-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--text-highlight-color), #34d399); transition: width 0.8s ease; }
+.ex-goal-remain { margin-top: 8px; font-size: 0.76rem; color: var(--text-info-color); }
+.ex-msg { font-size: 0.8rem; color: var(--text-info-color); }
 @media (max-width: 640px) {
   .ex-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -64,7 +87,9 @@
     if (!runs.length) { document.getElementById('ex-analytics').style.display = 'none'; return; }
 
     renderStats(runs);
+    renderGoal(runs);
     drawMonthly(document.getElementById('ex-chart-monthly'), monthlyData(runs));
+    drawCumulative(document.getElementById('ex-chart-cumulative'), runs);
     drawPace(document.getElementById('ex-chart-pace'), runs.filter(function (r) { return RUN_TYPES[r.type]; }));
     drawWeekday(document.getElementById('ex-chart-weekday'), runs);
   }
@@ -235,6 +260,51 @@
       label(svg, x + bw * 0.3, padT + innerH - h - 5, c, 'middle');
       label(svg, padL + i * bw + bw / 2, H - 8, '周' + names[i], 'middle');
     });
+    el.innerHTML = '';
+    el.appendChild(svg);
+  }
+
+  function renderGoal(runs) {
+    var goal = Number("{{ $goalKm }}");
+    if (!goal) { document.getElementById('ex-goal-card').style.display = 'none'; return; }
+    var year = new Date().getFullYear();
+    var yearKm = 0;
+    runs.forEach(function (r) { if (r.d.getFullYear() === year) yearKm += r.km; });
+    var pct = Math.min(100, Math.round(yearKm / goal * 100));
+    document.getElementById('ex-goal-fill').style.width = pct + '%';
+    document.getElementById('ex-goal-pct').textContent = pct + '%';
+    document.getElementById('ex-goal-remain').textContent = (yearKm / goal * 100).toFixed(1) + ' / ' + goal +
+      ' km' + (pct >= 100 ? ' · 🎉 目标达成！' : ' · 还差 ' + (goal - yearKm).toFixed(1) + ' km');
+  }
+
+  function drawCumulative(el, runs) {
+    if (runs.length < 2) return;
+    var W = 640, H = 210, padL = 46, padR = 14, padT = 18, padB = 26;
+    var innerW = W - padL - padR, innerH = H - padT - padB;
+    var total = 0;
+    var pts = runs.map(function (r) { total += r.km; return { date: r.dateStr, v: total }; });
+    var maxV = total;
+    function x(i) { return padL + innerW * i / (pts.length - 1); }
+    function y(v) { return padT + innerH * (1 - v / maxV); }
+    var svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, 'class': 'ex-svg' });
+    [0, 0.25, 0.5, 0.75, 1].forEach(function (f) {
+      var gy = padT + innerH * f;
+      svg.appendChild(svgEl('line', { x1: padL, x2: W - padR, y1: gy, y2: gy, 'class': 'ex-svg-line' }));
+      label(svg, padL - 6, gy + 4, Math.round(maxV * (1 - f)), 'end');
+    });
+    var linePts = pts.map(function (p, i) { return x(i).toFixed(1) + ',' + y(p.v).toFixed(1); }).join(' ');
+    svg.appendChild(svgEl('polygon', {
+      points: padL + ',' + (padT + innerH) + ' ' + linePts + ' ' + (W - padR) + ',' + (padT + innerH),
+      fill: 'var(--text-highlight-color)', opacity: 0.12
+    }));
+    svg.appendChild(svgEl('polyline', {
+      points: linePts, fill: 'none',
+      stroke: 'var(--text-highlight-color)', 'stroke-width': 2.2,
+      'stroke-linejoin': 'round', 'stroke-linecap': 'round'
+    }));
+    svg.appendChild(svgEl('circle', { cx: x(pts.length - 1).toFixed(1), cy: y(maxV).toFixed(1), r: 4, fill: 'var(--text-highlight-color)' }));
+    label(svg, padL, H - 8, pts[0].date, 'start');
+    label(svg, W - padR, H - 8, pts[pts.length - 1].date, 'end');
     el.innerHTML = '';
     el.appendChild(svg);
   }

@@ -70,6 +70,7 @@ RSSNoContent = false
   mapboxLightStyle = "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
   mapboxDarkStyle = "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
   mapCenter = [117.2244, 37.8122]
+  goalKm = 500
   posterFilePrefix = "JingzheExercise"
 
 [services.rss]

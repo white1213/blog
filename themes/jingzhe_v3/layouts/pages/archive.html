@@ -1,0 +1,74 @@
+{{ define "body_classes" }}page-archive{{ end }}
+
+{{ define "main" }}
+<div class="pagetitle">{{ .Description | default .Title }}</div>
+
+<div class="archive-search">
+  <input id="archive-q" class="wr-input" type="search" placeholder="🔍 搜索标题或正文…" autocomplete="off">
+</div>
+
+{{ $pages := where site.RegularPages "Type" "in" (slice "posts" "laodao") }}
+<div id="archive-list">
+  {{ range $pages.GroupByDate "2006" }}
+  <div class="archive-year" data-year="{{ .Key }}">
+    <h2 class="archive-year-head">{{ .Key }} <span class="archive-year-count">{{ len .Pages }} 篇</span></h2>
+    {{ range .Pages }}
+    <div class="archive-item" data-search="{{ lower (printf "%s %s" .Title .Plain) }}">
+      <time class="archive-date" datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "01-02" }}</time>
+      {{ if eq .Type "laodao" }}
+        <span class="archive-type is-laodao">唠叨</span>
+        <a class="archive-link is-laodao" href="{{ .RelPermalink }}">{{ .Plain | truncate 42 }}</a>
+      {{ else }}
+        <span class="archive-type is-post">随笔</span>
+        <a class="archive-link is-post" href="{{ .RelPermalink }}">{{ .Title }}</a>
+      {{ end }}
+    </div>
+    {{ end }}
+  </div>
+  {{ end }}
+</div>
+<p id="archive-empty" class="archive-empty" hidden>没有匹配的内容。</p>
+
+<style>
+.archive-search { margin-bottom: 20px; }
+.archive-search .wr-input { font-size: 0.95rem; padding: 11px 14px; border-radius: 999px; }
+.archive-year { margin-bottom: 26px; }
+.archive-year-head { margin: 0 0 12px; font-size: 1.15rem; }
+.archive-year-count { font-size: 0.78rem; font-weight: 400; color: var(--text-info-color); margin-left: 8px; }
+.archive-item { display: flex; align-items: center; gap: 12px; padding: 9px 6px; border-bottom: 1px solid rgba(120, 110, 90, 0.12); }
+.archive-item:hover { background: rgba(120, 110, 90, 0.06); }
+.archive-item[hidden] { display: none !important; }
+.archive-date { font-family: "GeistMono", monospace; font-size: 0.78rem; color: var(--text-info-color); flex-shrink: 0; }
+.archive-type { flex-shrink: 0; font-size: 0.68rem; padding: 2px 8px; border-radius: 999px; border: 1px solid currentColor; opacity: 0.75; }
+.archive-type.is-post { color: #7c6fce; }
+.archive-type.is-laodao { color: #d98a3d; }
+.archive-link { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-decoration: none; color: var(--text-content-color); font-size: 0.92rem; }
+.archive-link:hover { color: var(--text-highlight-color); }
+.archive-link.is-post { font-weight: 500; }
+.archive-year[hidden] { display: none !important; }
+.archive-empty { text-align: center; color: var(--text-info-color); padding: 40px 0; }
+</style>
+
+<script>
+(function () {
+  'use strict';
+  var input = document.getElementById('archive-q');
+  var empty = document.getElementById('archive-empty');
+  if (!input) return;
+  input.addEventListener('input', function () {
+    var q = input.value.trim().toLowerCase();
+    var any = false;
+    document.querySelectorAll('.archive-item').forEach(function (item) {
+      var match = !q || (item.dataset.search || '').indexOf(q) > -1;
+      item.hidden = !match;
+      if (match) any = true;
+    });
+    document.querySelectorAll('.archive-year').forEach(function (group) {
+      var visible = Array.prototype.some.call(group.querySelectorAll('.archive-item'), function (i) { return !i.hidden; });
+      group.hidden = !visible;
+    });
+    empty.hidden = any || !q;
+  });
+})();
+</script>
+{{ end }}

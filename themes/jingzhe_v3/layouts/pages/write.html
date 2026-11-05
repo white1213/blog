@@ -29,6 +29,11 @@
       </div>
     </div>
 
+    <div id="wr-editing" class="wr-editing" hidden>
+      ✏️ 正在编辑：<span id="wr-editing-path"></span>
+      <button id="wr-cancel-edit" class="wr-btn wr-btn-ghost" type="button">取消编辑</button>
+    </div>
+
     <div id="wr-post-fields" class="wr-fields">
       <div class="wr-field">
         <label for="wr-title">标题</label>
@@ -179,6 +184,9 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
 .wr-del { appearance: none; border: 1px solid rgba(217,83,79,.5); color: #d9534f; background: transparent; border-radius: 6px; padding: 4px 10px; font: inherit; font-size: .78rem; cursor: pointer; flex-shrink: 0; }
 .wr-del:hover { background: rgba(217,83,79,.1); }
 .wr-del:disabled { opacity: .5; cursor: default; }
+.wr-edit { appearance: none; border: 1px solid rgba(120, 110, 90, 0.4); color: var(--text-content-color); background: transparent; border-radius: 6px; padding: 4px 10px; font: inherit; font-size: 0.78rem; cursor: pointer; flex-shrink: 0; }
+.wr-edit:hover { background: rgba(120, 110, 90, 0.1); }
+.wr-editing { background: rgba(120, 110, 90, 0.1); border: 1px dashed rgba(120, 110, 90, 0.4); border-radius: 8px; padding: 8px 12px; font-size: 0.8rem; color: var(--text-info-color); margin-bottom: 14px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 @media (max-width: 760px) {
   .wr-editor-area { grid-template-columns: 1fr; }
   .wr-grid2 { grid-template-columns: 1fr; }
@@ -195,7 +203,7 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
   var DRAFT_KEY = 'jingzhe_draft_v1';
 
   var $ = function (id) { return document.getElementById(id); };
-  var state = { token: '', mode: 'post' };
+  var state = { token: '', mode: 'post', editing: null };
 
   function headers() {
     return { 'Authorization': 'Bearer ' + state.token, 'Accept': 'application/vnd.github+json' };
@@ -289,6 +297,8 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
 
   function setMode(mode) {
     state.mode = mode;
+    state.editing = null;
+    $('wr-editing').hidden = true;
     document.querySelectorAll('.wr-tab').forEach(function (b) {
       b.classList.toggle('is-active', b.dataset.mode === mode);
     });
@@ -312,34 +322,54 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
     var btn = $('wr-publish'), status = $('wr-status');
     var body = $('wr-body').value.trim();
     var t = nowLocal();
+    var editing = state.editing;
     var path, content, message;
     if (!body) { setStatus(status, '内容不能为空', 'err'); return; }
     if (state.mode === 'post') {
       var title = $('wr-title').value.trim();
       if (!title) { setStatus(status, '请填写标题', 'err'); return; }
-      var slug = slugify($('wr-slug').value.trim() || title) || ('post-' + Date.now());
       var tags = $('wr-tags').value.split(/[,，]/).map(function (s) { return s.trim(); }).filter(Boolean);
       var desc = $('wr-desc').value.trim();
-      var fm = '---\ntitle: ' + JSON.stringify(title) + '\ndate: ' + t + '\n';
-      if (desc) fm += 'description: ' + JSON.stringify(desc) + '\n';
-      if (tags.length) fm += 'tags: [' + tags.map(function (s) { return JSON.stringify(s); }).join(', ') + ']\n';
-      fm += '---\n\n';
-      path = 'content/posts/' + slug + '.md';
-      content = fm + body + '\n';
-      message = '新增文章：' + title;
+      if (editing && editing.mode === 'post') {
+        // 编辑模式:保留原日期等字段,仅更新标题/摘要/标签
+        var fmLines = editing.fmLines.slice();
+        var setLine = function (k, v) {
+          for (var i = 0; i < fmLines.length; i++) if (fmLines[i].indexOf(k + ':') === 0) { fmLines[i] = k + ': ' + v; return; }
+          fmLines.push(k + ': ' + v);
+        };
+        setLine('title', JSON.stringify(title));
+        setLine('description', JSON.stringify(desc));
+        setLine('tags', tags.length ? '[' + tags.map(function (s) { return JSON.stringify(s); }).join(', ') + ']' : '[]');
+        content = '---\n' + fmLines.join('\n') + '\n---\n\n' + body + '\n';
+        path = editing.path;
+        message = '更新文章：' + title;
+      } else {
+        var slug = slugify($('wr-slug').value.trim() || title) || ('post-' + Date.now());
+        var fm = '---\ntitle: ' + JSON.stringify(title) + '\ndate: ' + t + '\n';
+        if (desc) fm += 'description: ' + JSON.stringify(desc) + '\n';
+        if (tags.length) fm += 'tags: [' + tags.map(function (s) { return JSON.stringify(s); }).join(', ') + ']\n';
+        fm += '---\n\n';
+        path = 'content/posts/' + slug + '.md';
+        content = fm + body + '\n';
+        message = '新增文章：' + title;
+      }
+    } else if (editing && editing.mode === 'laodao') {
+      content = '---\n' + editing.fmLines.join('\n') + '\n---\n\n' + body + '\n';
+      path = editing.path;
+      message = '更新唠叨';
     } else {
       var d = new Date();
-      var y = d.getFullYear(), m = pad(d.getMonth() + 1), day = pad(d.getDate());
-      var hh = pad(d.getHours()), mm = pad(d.getMinutes()), ss = pad(d.getSeconds());
+      var y = d.getFullYear(), m = pad2(d.getMonth() + 1), day = pad2(d.getDate());
+      var hh = pad2(d.getHours()), mm = pad2(d.getMinutes()), ss = pad2(d.getSeconds());
       path = 'content/laodao/' + y + '/' + m + '/' + y + m + day + '-' + hh + mm + ss + '.md';
       content = '---\ndate: ' + t + '\n---\n\n' + body + '\n';
       message = '新增唠叨';
     }
     btn.disabled = true;
-    setStatus(status, '提交中…');
+    setStatus(status, editing ? '更新中…' : '提交中…');
     try {
       await ghPut(path, content, message);
-      setStatus(status, '已发布，1–2 分钟后上线', 'ok');
+      setStatus(status, (editing ? '已更新' : '已发布') + '，1–2 分钟后上线', 'ok');
       setTimeout(function () {
         var link = document.createElement('a');
         link.href = fileUrl(path); link.target = '_blank'; link.rel = 'noopener';
@@ -347,7 +377,8 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
         status.appendChild(document.createTextNode(' '));
         status.appendChild(link);
       }, 0);
-      localStorage.removeItem(DRAFT_KEY);
+      if (!editing) localStorage.removeItem(DRAFT_KEY);
+      cancelEditSilent();
     } catch (e) {
       setStatus(status, e.message, 'err');
     } finally {
@@ -407,12 +438,17 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
       p.className = 'wr-item-path';
       p.textContent = f.path;
       main.appendChild(t); main.appendChild(p);
+      var edit = document.createElement('button');
+      edit.className = 'wr-edit';
+      edit.type = 'button';
+      edit.textContent = '编辑';
+      edit.addEventListener('click', function () { editFile(f); });
       var btn = document.createElement('button');
       btn.className = 'wr-del';
       btn.type = 'button';
       btn.textContent = '删除';
       btn.addEventListener('click', function () { delFile(f, btn); });
-      row.appendChild(main); row.appendChild(btn);
+      row.appendChild(main); row.appendChild(edit); row.appendChild(btn);
       el.appendChild(row);
     });
   }
@@ -519,6 +555,65 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
     }
   }
 
+  async function editFile(file) {
+    var st = $('wr-manage-status');
+    try {
+      var res = await fetch('https://api.github.com/repos/' + OWNER + '/' + REPO + '/contents/' +
+        pathEncode(file.path) + '?ref=' + encodeURIComponent(BRANCH), { headers: headers() });
+      if (!res.ok) throw new Error('读取失败：' + (await res.json()).message);
+      var j = await res.json();
+      var text = b64DecodeUtf8(j.content || '');
+      var mode = file.path.indexOf('content/posts/') === 0 ? 'post' : 'laodao';
+      var m = text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+      var fmText = m ? m[1] : '';
+      var body = m ? m[2] : text;
+      var fmLines = fmText.split(/\r?\n/);
+      var getFm = function (k) {
+        for (var i = 0; i < fmLines.length; i++) {
+          var mm = fmLines[i].match(new RegExp('^' + k + ':\\s*(.*)$'));
+          if (mm) return mm[1].trim();
+        }
+        return '';
+      };
+      setMode(mode);
+      state.editing = { path: file.path, mode: mode, fmLines: fmLines };
+      $('wr-editing').hidden = false;
+      $('wr-editing-path').textContent = file.path;
+      if (mode === 'post') {
+        var tg = getFm('tags').replace(/^\[|\]$/g, '');
+        try { tg = JSON.parse('[' + tg + ']').map(function (s) { return String(s); }).join(', '); } catch (e) {}
+        $('wr-title').value = getFm('title').replace(/^['"]|['"]$/g, '');
+        $('wr-slug').value = file.name.replace(/\.md$/, '');
+        $('wr-tags').value = tg;
+        $('wr-desc').value = getFm('description').replace(/^['"]|['"]$/g, '');
+      }
+      $('wr-body').value = body.trim();
+      refreshPreview();
+      document.getElementById('wr-editor').scrollIntoView();
+      setStatus($('wr-status'), '已载入原文，改完点「发布」保存修改', 'ok');
+    } catch (e) {
+      setStatus(st, e.message, 'err');
+    }
+  }
+  function cancelEdit() {
+    state.editing = null;
+    $('wr-editing').hidden = true;
+    $('wr-title').value = ''; $('wr-slug').value = ''; $('wr-tags').value = ''; $('wr-desc').value = ''; $('wr-body').value = '';
+    refreshPreview();
+    setStatus($('wr-status'), '已退出编辑模式');
+  }
+
+  function cancelEditSilent() {
+    state.editing = null;
+    $('wr-editing').hidden = true;
+  }
+  function cancelEdit() {
+    cancelEditSilent();
+    $('wr-title').value = ''; $('wr-slug').value = ''; $('wr-tags').value = ''; $('wr-desc').value = ''; $('wr-body').value = '';
+    refreshPreview();
+    setStatus($('wr-status'), '已退出编辑模式');
+  }
+
   function showEditor() {    $('wr-login').hidden = true;
     $('wr-editor').hidden = false;
     $('wr-user').textContent = '已连接 ' + OWNER + '/' + REPO;
@@ -568,6 +663,7 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
     });
     $('wr-publish').addEventListener('click', publish);
     $('wr-ex-publish').addEventListener('click', submitExercise);
+    $('wr-cancel-edit').addEventListener('click', cancelEdit);
     $('wr-draft').addEventListener('click', function () {
       saveDraftLocal(); setStatus($('wr-status'), '草稿已存在本机（未发布）', 'ok');
     });

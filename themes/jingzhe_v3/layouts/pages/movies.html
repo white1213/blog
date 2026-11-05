@@ -14,6 +14,23 @@
   "5" "必看"
 }}
 
+{{ $ratedCount := 0 }}{{ $ratedSum := 0 }}{{ $fiveCount := 0 }}{{ $yearCount := 0 }}
+{{ range $movies }}
+  {{ $r := int (default 0 .rating) }}
+  {{ if gt $r 0 }}{{ $ratedCount = add $ratedCount 1 }}{{ $ratedSum = add $ratedSum $r }}{{ end }}
+  {{ if eq $r 5 }}{{ $fiveCount = add $fiveCount 1 }}{{ end }}
+  {{ with .create_time }}{{ $t := time (printf "%s+08:00" .) }}{{ if eq $t.Year now.Year }}{{ $yearCount = add $yearCount 1 }}{{ end }}{{ end }}
+{{ end }}
+{{ $avgRating := "" }}
+{{ if gt $ratedCount 0 }}{{ $avgRating = printf "%.1f" (div (float $ratedSum) (float $ratedCount)) }}{{ end }}
+
+<div class="movie-stats">
+  <div class="movie-stat"><b>{{ $yearCount }}</b><span>今年观影</span></div>
+  <div class="movie-stat"><b>{{ len $movies }}</b><span>累计</span></div>
+  <div class="movie-stat"><b>{{ $avgRating }}</b><span>平均评分</span></div>
+  <div class="movie-stat"><b>{{ $fiveCount }}</b><span>五星佳作</span></div>
+</div>
+
 <div id="movie-list" class="ticket-layout">
   {{ range $index, $movie := $movies }}
     {{ $rating := int (default 0 $movie.rating) }}
