@@ -217,6 +217,9 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
   var REPO = {{ $repo.name | jsonify | safeJS }};
   var BRANCH = {{ $repo.branch | default "main" | jsonify | safeJS }};
   var BASE_PATH = {{ (relURL "") | jsonify | safeJS }};
+  var IMG_MAX_DIM = {{ default 1400 (index site.Params.writer "imagemaxdim") }};
+  var IMG_TARGET = {{ default 350 (index site.Params.writer "imagetargetkb") }} * 1024;
+  var IMG_MIN_Q = {{ default 0.73 (index site.Params.writer "imageminq") }};
   var KEY = 'jingzhe_gh_token';
   var DRAFT_KEY = 'jingzhe_draft_v1';
 
@@ -735,17 +738,15 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
     });
   }
 
-  // 自适应压缩:质量优先
-  // 1) 小图(<300KB 且尺寸不大)原样上传,零画质损失
-  // 2) 最长边 1800px(博客正文最宽约 800px,2 倍屏也够清晰)
-  // 3) 质量从 0.95 起,尽量不低于 0.82;实在超限才继续缩尺寸
+  // 自适应压缩:视觉不失真前提下尽量小
+  // 1) 小图(<150KB 且不超尺寸)原样上传,零画质损失
+  // 2) 最长边缩到 IMG_MAX_DIM(默认 1400,正文 800px 足够清晰)
+  // 3) 质量从 0.9 起降,最低 IMG_MIN_Q(0.73);还超目标才继续缩尺寸
   function toBlob(canvas, type, quality) {
     return new Promise(function (resolve) { canvas.toBlob(resolve, type, quality); });
   }
 
   async function compressImage(file) {
-    var MAX_DIM = 1800;
-    var TARGET = 900 * 1024;
     var bmp = null;
     try {
       bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
@@ -756,15 +757,15 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
     var w = bmp.width, h = bmp.height;
 
     // 已经很小且尺寸不大 → 直接原图,不做任何重编码
-    if (file.size <= 300 * 1024 && Math.max(w, h) <= MAX_DIM && /^image\/(jpeg|webp|png|gif)$/.test(file.type)) {
+    if (file.size <= 150 * 1024 && Math.max(w, h) <= IMG_MAX_DIM && /^image\/(jpeg|webp|png|gif)$/.test(file.type)) {
       return { blob: file, ext: extOf(file) };
     }
 
-    var scale = Math.min(1, MAX_DIM / Math.max(w, h));
+    var scale = Math.min(1, IMG_MAX_DIM / Math.max(w, h));
     var cw = Math.round(w * scale), ch = Math.round(h * scale);
     var canvas = document.createElement('canvas');
     var ctx = canvas.getContext('2d');
-    var qualities = [0.95, 0.93, 0.91, 0.89, 0.87, 0.85, 0.82];
+    var qualities = [0.90, 0.87, 0.84, 0.81, 0.78, IMG_MIN_Q];
 
     canvas.width = cw;
     canvas.height = ch;
@@ -774,24 +775,24 @@ select.wr-input { appearance: auto; background-color: var(--background-card-colo
     for (var i = 0; i < qualities.length; i++) {
       var blob = await toBlob(canvas, 'image/webp', qualities[i]);
       if (!blob) continue;
-      if (blob.size <= TARGET) {
+      if (blob.size <= IMG_TARGET) {
         // 重编码比原图还大 → 保留原图
-        if (blob.size >= file.size && file.size <= TARGET) {
+        if (blob.size >= file.size && file.size <= IMG_TARGET) {
           return { blob: file, ext: extOf(file) };
         }
         return { blob: blob, ext: 'webp', quality: qualities[i], width: cw, height: ch };
       }
     }
 
-    // 0.82 仍超限(极少见):缩 15% 后重试一次
+    // 最低质量仍超目标:缩 15% 后重试(尺寸换质量,视觉更稳)
     cw = Math.round(cw * 0.85);
     ch = Math.round(ch * 0.85);
     canvas.width = cw;
     canvas.height = ch;
     ctx.clearRect(0, 0, cw, ch);
     ctx.drawImage(bmp, 0, 0, cw, ch);
-    var last = await toBlob(canvas, 'image/webp', 0.82);
-    return last ? { blob: last, ext: 'webp', quality: 0.82, width: cw, height: ch } : { blob: file, ext: extOf(file) };
+    var last = await toBlob(canvas, 'image/webp', IMG_MIN_Q);
+    return last ? { blob: last, ext: 'webp', quality: IMG_MIN_Q, width: cw, height: ch } : { blob: file, ext: extOf(file) };
   }
 
   function insertAtCursor(el, text) {
