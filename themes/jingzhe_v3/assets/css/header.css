@@ -193,6 +193,15 @@
     width: 640px;
     max-width: calc(100vw - 40px);
   }
+
+  /* 本站：项多了以后 42px 间距会把「动起来」挤到换行，收紧间距并禁止标签折行 */
+  .main-nav-menu .menu-list {
+    gap: 28px;
+  }
+
+  .main-nav-menu .menu-name {
+    white-space: nowrap;
+  }
 }
 
 /* 本站：头像加一圈描边，与深色底和图标区分开 */
