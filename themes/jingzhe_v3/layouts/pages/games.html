@@ -43,7 +43,14 @@
 
 <style>
 .gm-empty { padding: 60px 20px; text-align: center; color: var(--text-info-color); }
-.gm-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 4px 0 22px; }
+/* 突破正文 800px 限制，撑满可用宽度，消除两侧大片留白 */
+.page-games .gm-stats,
+.page-games .gm-grid {
+  --gm-width: min(1320px, calc(100vw - 40px));
+  width: var(--gm-width);
+  margin-left: calc((100% - var(--gm-width)) / 2);
+}
+.gm-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 24px; }
 .gm-stat { background: var(--background-card-color); border: 1px solid rgba(120,110,90,.16); border-radius: 12px; padding: 14px; text-align: center; }
 .gm-stat b { display: block; font-size: 1.2rem; margin-bottom: 4px; }
 .gm-stat b.is-name { font-size: .92rem; line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
