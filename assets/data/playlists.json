@@ -5,9 +5,49 @@
     "cover": "playlist-covers/9061797457.jpg",
     "desc": "",
     "creator": "归心.",
-    "song_count": 513,
+    "song_count": 518,
     "source_url": "https://y.qq.com/n/ryqq/playlist/9061797457",
     "songs": [
+      {
+        "name": "你最近好吗",
+        "singers": "汪苏泷",
+        "album": "你最近好吗",
+        "interval": 241,
+        "songmid": "000ROBYj2Tzg1S",
+        "cover": "https://y.gtimg.cn/music/photo_new/T002R300x300M000001CiPRc4g34pT.jpg"
+      },
+      {
+        "name": "阳光下的星星",
+        "singers": "金海心",
+        "album": "金海心精选歌曲",
+        "interval": 283,
+        "songmid": "0040lWQu0tfvxv",
+        "cover": "https://y.gtimg.cn/music/photo_new/T002R300x300M000003KRmPi0eqCRm.jpg"
+      },
+      {
+        "name": "Call your name (Gv)",
+        "singers": "澤野弘之 (さわの ひろゆき) / R!N/Gemie",
+        "album": "「進撃の巨人」Season3 オリジナル・サウンドトラック (进击的巨人第三季 动画原声带)",
+        "interval": 259,
+        "songmid": "000zOxYb2Xa9p1",
+        "cover": "https://y.gtimg.cn/music/photo_new/T002R300x300M000000GHr773SppMX.jpg"
+      },
+      {
+        "name": "拉过勾的",
+        "singers": "陆虎",
+        "album": "花吃泡面男",
+        "interval": 218,
+        "songmid": "0049OplG1300dd",
+        "cover": "https://y.gtimg.cn/music/photo_new/T002R300x300M000004IWdvO0fFlKH.jpg"
+      },
+      {
+        "name": "无限",
+        "singers": "周深",
+        "album": "重启之极海听雷OST",
+        "interval": 254,
+        "songmid": "00080G582tECWc",
+        "cover": "https://y.gtimg.cn/music/photo_new/T002R300x300M0000020V9TA1cBDMF.jpg"
+      },
       {
         "name": "我还想她",
         "singers": "林俊杰",
