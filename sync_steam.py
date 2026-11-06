@@ -87,6 +87,9 @@ def main(cred_path):
     )
     games = owned.get("response", {}).get("games", [])
     print("  共 {} 款游戏".format(len(games)))
+    if not games:
+        # 接口异常或资料非公开时不要覆盖已有数据
+        raise SystemExit("❌ 接口没有返回游戏（资料可能非公开或 Key 失效），保持现有数据不变")
 
     print("🕹️ 拉取最近游玩…")
     recent_ids = set()
@@ -123,6 +126,17 @@ def main(cred_path):
         time.sleep(0.25)
 
     DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
+    previous = []
+    if DATA_FILE.exists():
+        try:
+            previous = json.loads(DATA_FILE.read_text(encoding="utf-8"))
+        except Exception:
+            previous = []
+
+    if previous == out:
+        print("☕ 游戏库没有变化，跳过写入")
+        return 0
+
     DATA_FILE.write_text(json.dumps(out, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     total_hours = sum(x["hours"] for x in out)

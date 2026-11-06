@@ -1,0 +1,75 @@
+name: Steam Sync
+
+on:
+  schedule:
+    # UTC 21:10 = 北京时间每天 05:10
+    - cron: '10 21 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: steam-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Write credentials
+        env:
+          STEAM_API_KEY: ${{ secrets.STEAM_API_KEY }}
+          STEAM_ID: ${{ vars.STEAM_ID }}
+        run: |
+          if [ -z "$STEAM_API_KEY" ] || [ -z "$STEAM_ID" ]; then
+            echo "::error::缺少 STEAM_API_KEY(secret) 或 STEAM_ID(variable)"
+            exit 1
+          fi
+          printf 'STEAM_API_KEY=%s\nSTEAM_ID=%s\n' "$STEAM_API_KEY" "$STEAM_ID" > /tmp/steam.env
+          chmod 600 /tmp/steam.env
+
+      - name: Sync library
+        run: python sync_steam.py /tmp/steam.env
+
+      - name: Cleanup credentials
+        if: always()
+        run: rm -f /tmp/steam.env
+
+      # GITHUB_TOKEN 的 push 不触发其他工作流，提交后主动点燃部署。
+      - name: Commit and trigger deploy
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git add assets/data/steam.json static/steam-covers
+          if git diff --staged --quiet; then
+            echo "No steam changes."
+            exit 0
+          fi
+          git config user.name "white1213-bot"
+          git config user.email "1665491507a@gmail.com"
+          git commit -m "chore: sync steam library"
+          for attempt in 1 2 3; do
+            git fetch origin main
+            if git rebase origin/main && git push origin HEAD:main; then
+              curl -sf -X POST \
+                -H "Authorization: Bearer $GH_TOKEN" \
+                -H "Accept: application/vnd.github+json" \
+                https://api.github.com/repos/white1213/blog/actions/workflows/deploy.yml/dispatches \
+                -d '{"ref":"main"}'
+              exit 0
+            fi
+            git rebase --abort 2>/dev/null || true
+          done
+          echo "::error::push failed after retries"
+          exit 1
