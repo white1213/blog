@@ -194,9 +194,15 @@
     max-width: calc(100vw - 40px);
   }
 
-  /* 本站：项多了以后 42px 间距会把「动起来」挤到换行，收紧间距并禁止标签折行 */
+  /* 本站：项多了以后固定 42px 间距会让布局失衡，改成导航铺满左侧、项间均匀分布 */
+  .main-nav-menu {
+    flex: 1 1 auto;
+  }
+
   .main-nav-menu .menu-list {
-    gap: 28px;
+    width: 100%;
+    justify-content: space-between;
+    gap: 12px;
   }
 
   .main-nav-menu .menu-name {
