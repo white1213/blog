@@ -52,6 +52,7 @@
       <a class="home-stat" href="{{ "playlist/" | relURL }}"><b>{{ $songCount }}</b> 首歌</a>
       <a class="home-stat" href="{{ "games/" | relURL }}"><b>{{ $gameCount }}</b> 款游戏 · <b>{{ $gameHoursRounded }}</b> 小时</a>
     </div>
+    <div class="home-updated">数据更新于 {{ now.Format "2006-01-02 15:04" }}</div>
   </div>
 </div>
 

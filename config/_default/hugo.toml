@@ -1,5 +1,6 @@
 baseURL = "https://white1213.github.io/blog/"
 locale = "zh-CN"
+timeZone = "Asia/Shanghai"
 title = "我的站点"
 theme = "jingzhe_v3"
 
