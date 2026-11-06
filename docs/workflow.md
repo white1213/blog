@@ -53,10 +53,12 @@ GitHub Pages  →  white1213.github.io/blog/
 | 项目 | 说明 |
 | --- | --- |
 | 触发 | push 到 `main`（但纯 `data/exercise/activities.json` 的提交会跳过）；也可手动 |
-| 步骤 | checkout → 安装 Hugo Extended（latest）→ `hugo --minify --panicOnWarning` → 上传 Pages 产物 → 发布 |
-| 产出 | 站点上线 |
+| 步骤 | checkout → 安装 Hugo Extended（latest）→ `hugo --minify --panicOnWarning` → 把 `public/` 推到 `gh-pages` 分支 |
+| 产出 | 站点上线（Pages 从 `gh-pages` 分支构建） |
 
 构建命令带 `--panicOnWarning`，任何模板警告都会让构建失败——宁可不上线，也不发布有问题的页面。
+
+> **部署方式说明**：Pages 的 Source 设为「分支：`gh-pages`」，不再使用 `deploy-pages` Action。原因是 2026-11-05 GitHub 的 Pages deployment API 返回 500，导致部署队列卡死十几个小时；改走分支部署后不依赖该接口。若需要手动救急：本地 `hugo --minify --panicOnWarning`，把 `public/` 内容推到 `gh-pages` 分支即可。
 
 ### 2. douban-sync.yml —— 豆瓣观影同步
 
