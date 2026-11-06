@@ -35,6 +35,7 @@
     </div>
     <div class="gm-name">{{ .name }}</div>
     <div class="gm-hours">{{ .hours }} 小时</div>
+    <div class="gm-bar"><i style="width: {{ math.Round (mul (div (float .hours) (float $top.hours)) 100) }}%"></i></div>
   </a>
   {{ end }}
 </div>
@@ -42,22 +43,23 @@
 
 <style>
 .gm-empty { padding: 60px 20px; text-align: center; color: var(--text-info-color); }
-.gm-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 4px 0 20px; }
+.gm-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 4px 0 22px; }
 .gm-stat { background: var(--background-card-color); border: 1px solid rgba(120,110,90,.16); border-radius: 12px; padding: 14px; text-align: center; }
 .gm-stat b { display: block; font-size: 1.2rem; margin-bottom: 4px; }
 .gm-stat span { font-size: .75rem; color: var(--text-info-color); }
-.gm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 16px; }
-.gm-card { text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 8px; }
-.gm-cover { position: relative; aspect-ratio: 460 / 215; border-radius: 10px; overflow: hidden; background: rgba(120,110,90,.12); box-shadow: 0 4px 14px rgba(0,0,0,.15); transition: transform .18s ease, box-shadow .18s ease; }
-.gm-card:hover .gm-cover { transform: translateY(-4px); box-shadow: 0 12px 26px rgba(0,0,0,.22); }
+.gm-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+@media (min-width: 560px) { .gm-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 900px) { .gm-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 1180px) { .gm-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+.gm-card { text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 9px; }
+.gm-cover { position: relative; aspect-ratio: 2 / 3; border-radius: 10px; overflow: hidden; background: rgba(120,110,90,.12); box-shadow: 0 6px 18px rgba(0,0,0,.16); transition: transform .2s ease, box-shadow .2s ease; }
+.gm-card:hover .gm-cover { transform: translateY(-5px); box-shadow: 0 14px 30px rgba(0,0,0,.26); }
 .gm-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.gm-cover-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: var(--text-info-color); }
-.gm-badge { position: absolute; top: 8px; right: 8px; padding: 2px 8px; border-radius: 999px; background: rgba(0,0,0,.65); color: #fff; font-size: .68rem; font-weight: 600; backdrop-filter: blur(4px); }
+.gm-cover-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; color: var(--text-info-color); }
+.gm-badge { position: absolute; top: 8px; right: 8px; padding: 2px 8px; border-radius: 999px; background: rgba(0,0,0,.68); color: #fff; font-size: .66rem; font-weight: 600; backdrop-filter: blur(4px); }
 .gm-name { font-size: .9rem; font-weight: 600; line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gm-hours { font-size: .76rem; color: var(--text-info-color); }
-@media (max-width: 640px) {
-  .gm-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .gm-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
-}
+.gm-bar { height: 3px; border-radius: 2px; background: rgba(120,110,90,.16); overflow: hidden; }
+.gm-bar i { display: block; height: 100%; border-radius: 2px; background: var(--text-highlight-color); }
 </style>
 {{ end }}

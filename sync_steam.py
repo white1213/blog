@@ -59,22 +59,27 @@ def get_json(url, retries=3):
 
 
 def download_cover(appid):
+    """优先竖版库封面(600x900)，没有就退回横版 header(460x215)。"""
     path = COVERS_DIR / "{}.jpg".format(appid)
     if path.exists():
         return "steam-covers/{}.jpg".format(appid)
-    url = "https://cdn.akamai.steamstatic.com/steam/apps/{}/header.jpg".format(appid)
-    try:
-        req = urllib.request.Request(url, headers={"User-Agent": UA})
-        with urllib.request.urlopen(req, timeout=25) as r:
-            data = r.read()
-        if not data.startswith(b"\xff\xd8") and not data.startswith(b"\x89PNG"):
-            return ""
-        COVERS_DIR.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(data)
-        return "steam-covers/{}.jpg".format(appid)
-    except Exception as exc:
-        print("  ⚠️ 封面失败 {}: {}".format(appid, exc))
-        return ""
+    for url in (
+        "https://cdn.akamai.steamstatic.com/steam/apps/{}/library_600x900.jpg".format(appid),
+        "https://cdn.akamai.steamstatic.com/steam/apps/{}/header.jpg".format(appid),
+    ):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": UA})
+            with urllib.request.urlopen(req, timeout=25) as r:
+                data = r.read()
+            if not data.startswith(b"\xff\xd8") and not data.startswith(b"\x89PNG"):
+                continue
+            COVERS_DIR.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(data)
+            return "steam-covers/{}.jpg".format(appid)
+        except Exception:
+            continue
+    print("  ⚠️ 封面失败 {}".format(appid))
+    return ""
 
 
 def main(cred_path):
