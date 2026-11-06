@@ -19,7 +19,7 @@
   <div class="gm-stat"><b>{{ len $games }}</b><span>玩过的游戏</span></div>
   <div class="gm-stat"><b>{{ printf "%.0f" $totalHours }}</b><span>总时长（小时）</span></div>
   <div class="gm-stat"><b>{{ $recentCount }}</b><span>最近两周在玩</span></div>
-  <div class="gm-stat"><b title="{{ $top.name }}">{{ $top.name | truncate 8 "" }}</b><span>最常玩</span></div>
+  <div class="gm-stat"><b class="is-name" title="{{ $top.name }}">{{ $top.name }}</b><span>最常玩</span></div>
 </div>
 
 <div class="gm-grid">
@@ -46,6 +46,7 @@
 .gm-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 4px 0 22px; }
 .gm-stat { background: var(--background-card-color); border: 1px solid rgba(120,110,90,.16); border-radius: 12px; padding: 14px; text-align: center; }
 .gm-stat b { display: block; font-size: 1.2rem; margin-bottom: 4px; }
+.gm-stat b.is-name { font-size: .92rem; line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gm-stat span { font-size: .75rem; color: var(--text-info-color); }
 .gm-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
 @media (min-width: 560px) { .gm-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
