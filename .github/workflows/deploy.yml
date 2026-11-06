@@ -9,9 +9,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: "pages"
@@ -33,18 +31,14 @@ jobs:
       - name: Build
         run: hugo --minify --panicOnWarning
 
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+      # 直接发布到 gh-pages 分支，由 Pages 从分支构建。
+      # 不依赖 Pages 的 deployment API（该接口曾出现 500 并导致部署队列卡死）。
+      - name: Deploy to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: ./public
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          publish_branch: gh-pages
+          force_orphan: true
+          user_name: white1213-bot
+          user_email: 1665491507a@gmail.com
