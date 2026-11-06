@@ -183,9 +183,15 @@
     gap: 16px;
   }
 
-  /* 本站：导航项变多后头像紧贴最后一个图标，这里留出间距 */
   .floating-header .header-actions {
     margin-left: 14px;
+  }
+
+  /* 本站：导航增加到 7 项后 600px 装不下（内容 630px），加宽到 640px，
+     让头像区回到正常右边距，左右留白对称 */
+  .floating-header {
+    width: 640px;
+    max-width: calc(100vw - 40px);
   }
 }
 
