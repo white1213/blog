@@ -1,0 +1,322 @@
+[
+  {
+    "appid": 271590,
+    "name": "Grand Theft Auto V Legacy",
+    "minutes": 6566,
+    "hours": 109.4,
+    "recent": false,
+    "cover": "steam-covers/271590.jpg"
+  },
+  {
+    "appid": 3240220,
+    "name": "Grand Theft Auto V Enhanced",
+    "minutes": 5817,
+    "hours": 97.0,
+    "recent": false,
+    "cover": "steam-covers/3240220.jpg"
+  },
+  {
+    "appid": 292030,
+    "name": "The Witcher 3: Wild Hunt — Remastered",
+    "minutes": 5799,
+    "hours": 96.7,
+    "recent": false,
+    "cover": "steam-covers/292030.jpg"
+  },
+  {
+    "appid": 2050650,
+    "name": "Resident Evil 4",
+    "minutes": 5305,
+    "hours": 88.4,
+    "recent": false,
+    "cover": "steam-covers/2050650.jpg"
+  },
+  {
+    "appid": 1203220,
+    "name": "NARAKA: BLADEPOINT",
+    "minutes": 5127,
+    "hours": 85.5,
+    "recent": false,
+    "cover": "steam-covers/1203220.jpg"
+  },
+  {
+    "appid": 250900,
+    "name": "The Binding of Isaac: Rebirth",
+    "minutes": 3925,
+    "hours": 65.4,
+    "recent": true,
+    "cover": "steam-covers/250900.jpg"
+  },
+  {
+    "appid": 550,
+    "name": "Left 4 Dead 2",
+    "minutes": 1588,
+    "hours": 26.5,
+    "recent": false,
+    "cover": "steam-covers/550.jpg"
+  },
+  {
+    "appid": 431960,
+    "name": "Wallpaper Engine",
+    "minutes": 1480,
+    "hours": 24.7,
+    "recent": false,
+    "cover": "steam-covers/431960.jpg"
+  },
+  {
+    "appid": 265550,
+    "name": "Dead Rising 3",
+    "minutes": 1127,
+    "hours": 18.8,
+    "recent": false,
+    "cover": "steam-covers/265550.jpg"
+  },
+  {
+    "appid": 466130,
+    "name": "White Day: A Labyrinth Named School",
+    "minutes": 992,
+    "hours": 16.5,
+    "recent": false,
+    "cover": "steam-covers/466130.jpg"
+  },
+  {
+    "appid": 414700,
+    "name": "Outlast 2",
+    "minutes": 710,
+    "hours": 11.8,
+    "recent": false,
+    "cover": "steam-covers/414700.jpg"
+  },
+  {
+    "appid": 960910,
+    "name": "Heavy Rain",
+    "minutes": 669,
+    "hours": 11.2,
+    "recent": false,
+    "cover": "steam-covers/960910.jpg"
+  },
+  {
+    "appid": 1326470,
+    "name": "Sons Of The Forest",
+    "minutes": 653,
+    "hours": 10.9,
+    "recent": false,
+    "cover": "steam-covers/1326470.jpg"
+  },
+  {
+    "appid": 282070,
+    "name": "This War of Mine",
+    "minutes": 649,
+    "hours": 10.8,
+    "recent": false,
+    "cover": "steam-covers/282070.jpg"
+  },
+  {
+    "appid": 242760,
+    "name": "The Forest",
+    "minutes": 611,
+    "hours": 10.2,
+    "recent": false,
+    "cover": "steam-covers/242760.jpg"
+  },
+  {
+    "appid": 489830,
+    "name": "The Elder Scrolls V: Skyrim Special Edition",
+    "minutes": 556,
+    "hours": 9.3,
+    "recent": false,
+    "cover": "steam-covers/489830.jpg"
+  },
+  {
+    "appid": 286690,
+    "name": "Metro 2033 Redux",
+    "minutes": 440,
+    "hours": 7.3,
+    "recent": false,
+    "cover": "steam-covers/286690.jpg"
+  },
+  {
+    "appid": 1546990,
+    "name": "Grand Theft Auto: Vice City - The Definitive Edition",
+    "minutes": 400,
+    "hours": 6.7,
+    "recent": false,
+    "cover": "steam-covers/1546990.jpg"
+  },
+  {
+    "appid": 960990,
+    "name": "Beyond: Two Souls",
+    "minutes": 232,
+    "hours": 3.9,
+    "recent": false,
+    "cover": "steam-covers/960990.jpg"
+  },
+  {
+    "appid": 238320,
+    "name": "Outlast",
+    "minutes": 195,
+    "hours": 3.2,
+    "recent": false,
+    "cover": "steam-covers/238320.jpg"
+  },
+  {
+    "appid": 322330,
+    "name": "Don't Starve Together",
+    "minutes": 193,
+    "hours": 3.2,
+    "recent": false,
+    "cover": "steam-covers/322330.jpg"
+  },
+  {
+    "appid": 543460,
+    "name": "Dead Rising 4",
+    "minutes": 123,
+    "hours": 2.0,
+    "recent": false,
+    "cover": "steam-covers/543460.jpg"
+  },
+  {
+    "appid": 412020,
+    "name": "Metro Exodus",
+    "minutes": 104,
+    "hours": 1.7,
+    "recent": false,
+    "cover": "steam-covers/412020.jpg"
+  },
+  {
+    "appid": 1568590,
+    "name": "Goose Goose Duck",
+    "minutes": 86,
+    "hours": 1.4,
+    "recent": false,
+    "cover": "steam-covers/1568590.jpg"
+  },
+  {
+    "appid": 21690,
+    "name": "Resident Evil 5",
+    "minutes": 78,
+    "hours": 1.3,
+    "recent": true,
+    "cover": "steam-covers/21690.jpg"
+  },
+  {
+    "appid": 1051310,
+    "name": "Paper Dolls Original",
+    "minutes": 69,
+    "hours": 1.1,
+    "recent": false,
+    "cover": "steam-covers/1051310.jpg"
+  },
+  {
+    "appid": 792300,
+    "name": "The Beast Inside",
+    "minutes": 65,
+    "hours": 1.1,
+    "recent": false,
+    "cover": "steam-covers/792300.jpg"
+  },
+  {
+    "appid": 674750,
+    "name": "Yet Another Zombie Defense HD",
+    "minutes": 56,
+    "hours": 0.9,
+    "recent": false,
+    "cover": "steam-covers/674750.jpg"
+  },
+  {
+    "appid": 108600,
+    "name": "Project Zomboid",
+    "minutes": 45,
+    "hours": 0.8,
+    "recent": false,
+    "cover": "steam-covers/108600.jpg"
+  },
+  {
+    "appid": 1030840,
+    "name": "Mafia: Definitive Edition",
+    "minutes": 45,
+    "hours": 0.8,
+    "recent": false,
+    "cover": "steam-covers/1030840.jpg"
+  },
+  {
+    "appid": 397540,
+    "name": "Borderlands 3",
+    "minutes": 43,
+    "hours": 0.7,
+    "recent": false,
+    "cover": "steam-covers/397540.jpg"
+  },
+  {
+    "appid": 40990,
+    "name": "Mafia",
+    "minutes": 29,
+    "hours": 0.5,
+    "recent": false,
+    "cover": "steam-covers/40990.jpg"
+  },
+  {
+    "appid": 860510,
+    "name": "Little Nightmares II",
+    "minutes": 25,
+    "hours": 0.4,
+    "recent": false,
+    "cover": "steam-covers/860510.jpg"
+  },
+  {
+    "appid": 223710,
+    "name": "Cry of Fear",
+    "minutes": 22,
+    "hours": 0.4,
+    "recent": true,
+    "cover": "steam-covers/223710.jpg"
+  },
+  {
+    "appid": 537340,
+    "name": "Guts and Glory",
+    "minutes": 22,
+    "hours": 0.4,
+    "recent": false,
+    "cover": "steam-covers/537340.jpg"
+  },
+  {
+    "appid": 223470,
+    "name": "POSTAL 2",
+    "minutes": 15,
+    "hours": 0.2,
+    "recent": false,
+    "cover": "steam-covers/223470.jpg"
+  },
+  {
+    "appid": 1449690,
+    "name": "The Walking Dead: The Telltale Definitive Series",
+    "minutes": 13,
+    "hours": 0.2,
+    "recent": false,
+    "cover": "steam-covers/1449690.jpg"
+  },
+  {
+    "appid": 793460,
+    "name": "112 Operator",
+    "minutes": 9,
+    "hours": 0.1,
+    "recent": false,
+    "cover": "steam-covers/793460.jpg"
+  },
+  {
+    "appid": 1071870,
+    "name": "Biped",
+    "minutes": 3,
+    "hours": 0.1,
+    "recent": false,
+    "cover": "steam-covers/1071870.jpg"
+  },
+  {
+    "appid": 405640,
+    "name": "Pony Island",
+    "minutes": 1,
+    "hours": 0.0,
+    "recent": false,
+    "cover": "steam-covers/405640.jpg"
+  }
+]
