@@ -1,6 +1,6 @@
 ---
 title: 一个博客的诞生：从零到全自动
-date: 2026-11-07T12:00:00+08:00
+date: 2026-11-07T08:00:00+08:00
 categories: [折腾]
 tags: [博客, Hugo, GitHub Actions, AI]
 description: 电影在豆瓣，跑步在 Keep，游戏在 Steam，歌单在 QQ 音乐。我看不下去了，就自己搭了一个站。
