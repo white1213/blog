@@ -1,5 +1,6 @@
 ---
 title: 一个博客的诞生：从零到全自动
+slug: blog-born
 date: 2026-11-07T08:00:00+08:00
 categories: [折腾]
 tags: [博客, Hugo, GitHub Actions, AI]
