@@ -1,5 +1,47 @@
 [
   {
+    "id": "manual-wjbxian",
+    "type": "tv",
+    "title": "我叫白小飞",
+    "year": "2024",
+    "rating": 4,
+    "comment": "",
+    "link": "https://movie.douban.com/subject/26759936/",
+    "create_time": "2026-11-08 14:30:00",
+    "color_scheme": {},
+    "cover": "movies-covers/manual-wjbxian.jpg",
+    "intro": "",
+    "note": "豆瓣条目受限，手动补录"
+  },
+  {
+    "id": "manual-shixiong",
+    "type": "movie",
+    "title": "尸兄",
+    "year": "2013",
+    "rating": 4,
+    "comment": "",
+    "link": "https://www.douban.com/search?q=%E5%B0%B8%E5%85%84",
+    "create_time": "2026-11-08 14:30:00",
+    "color_scheme": {},
+    "cover": "",
+    "intro": "",
+    "note": "豆瓣条目受限，手动补录"
+  },
+  {
+    "id": "manual-zjxy1",
+    "type": "tv",
+    "title": "僵尸校园 第一季",
+    "year": "2022",
+    "rating": 4,
+    "comment": "",
+    "link": "https://www.douban.com/search?q=%E5%83%B5%E5%B0%B8%E6%A0%A1%E5%9B%AD",
+    "create_time": "2026-11-08 14:30:00",
+    "color_scheme": {},
+    "cover": "",
+    "intro": "",
+    "note": "豆瓣条目受限，手动补录"
+  },
+  {
     "id": "35096844",
     "type": "movie",
     "title": "送你一朵小红花",

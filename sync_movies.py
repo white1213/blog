@@ -250,6 +250,9 @@ def merge_movies(local_movies: Iterable[dict], remote_movies: Iterable[dict]) ->
         if not movie_id or movie_id not in remote_ids:
             merged.append(movie)
 
+    # 手动补录的条目不在远端流里,追加后会在尾部;按标记时间排序让它们落到正确位置
+    merged.sort(key=lambda m: str(m.get("create_time") or ""), reverse=True)
+
     return merged, new_count, updated_count
 
 
