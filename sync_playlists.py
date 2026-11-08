@@ -162,6 +162,8 @@ def main(argv):
         json.dumps(ordered, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
     print("💾 已写入 {} 个歌单 -> {}".format(len(ordered), DATA_FILE))
+    import sync_status
+    sync_status.mark("playlists")
     return 0
 
 

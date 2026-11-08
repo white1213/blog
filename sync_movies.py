@@ -381,6 +381,9 @@ def main() -> int:
     else:
         print("☕ 没有变化，本地已是最新。")
 
+    import sync_status
+    sync_status.mark("movies")
+
     github_env = os.environ.get("GITHUB_ENV")
     if github_env:
         write_github_environment(Path(github_env), result)

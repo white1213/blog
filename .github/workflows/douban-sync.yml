@@ -43,21 +43,38 @@ jobs:
         run: python sync_movies.py
 
       # GITHUB_TOKEN 的 push 不触发其他工作流，因此提交后主动点燃 deploy。
+      # 心跳设计：sync-status.json 每次必更新，无数据变化的日子也有提交+部署，
+      # 首页的"今日已自动同步"由此点亮。
       - name: Commit and trigger deploy
-        if: env.HAS_NEW_DATA == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "white1213-bot"
           git config user.email "1665491507a@gmail.com"
-          git add assets/data/movies.json
+          git add assets/data/movies.json assets/data/sync-status.json
           if [ -d static/movies-covers ]; then
             git add static/movies-covers
           fi
-          git commit -m "chore: sync douban movies"
-          git push origin HEAD:main
-          curl -sf -X POST \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/white1213/blog/actions/workflows/deploy.yml/dispatches \
-            -d '{"ref":"main"}'
+          if git diff --staged --quiet; then
+            echo "Nothing to commit."
+            exit 0
+          fi
+          if git diff --staged --name-only | grep -qv 'assets/data/sync-status.json'; then
+            git commit -m "chore: sync douban movies"
+          else
+            git commit -m "chore: douban check-in (no data changes)"
+          fi
+          for attempt in 1 2 3; do
+            git fetch origin main
+            if git rebase origin/main && git push origin HEAD:main; then
+              curl -sf -X POST \
+                -H "Authorization: Bearer $GH_TOKEN" \
+                -H "Accept: application/vnd.github+json" \
+                https://api.github.com/repos/white1213/blog/actions/workflows/deploy.yml/dispatches \
+                -d '{"ref":"main"}'
+              exit 0
+            fi
+            git rebase --abort 2>/dev/null || true
+          done
+          echo "::error::push failed after retries"
+          exit 1

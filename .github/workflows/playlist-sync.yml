@@ -49,7 +49,7 @@ jobs:
         run: |
           git config user.name "white1213-bot"
           git config user.email "1665491507a@gmail.com"
-          git add assets/data/playlists.json
+          git add assets/data/playlists.json assets/data/sync-status.json
           if [ -d static/playlist-covers ]; then
             git add static/playlist-covers
           fi
@@ -57,7 +57,11 @@ jobs:
             echo "No playlist changes."
             exit 0
           fi
-          git commit -m "chore: sync playlists"
+          if git diff --staged --name-only | grep -qv 'assets/data/sync-status.json'; then
+            git commit -m "chore: sync playlists"
+          else
+            git commit -m "chore: playlist check-in (no data changes)"
+          fi
           for attempt in 1 2 3; do
             git fetch origin main
             if git rebase origin/main && git push origin HEAD:main; then

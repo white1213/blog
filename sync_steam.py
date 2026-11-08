@@ -17,6 +17,8 @@ import time
 import urllib.request
 from pathlib import Path
 
+import sync_status
+
 if hasattr(sys.stdout, "reconfigure"):
     try:
         sys.stdout.reconfigure(encoding="utf-8")
@@ -140,9 +142,11 @@ def main(cred_path):
 
     if previous == out:
         print("☕ 游戏库没有变化，跳过写入")
+        sync_status.mark("steam")
         return 0
 
     DATA_FILE.write_text(json.dumps(out, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    sync_status.mark("steam")
 
     total_hours = sum(x["hours"] for x in out)
     with_cover = sum(1 for x in out if x["cover"])

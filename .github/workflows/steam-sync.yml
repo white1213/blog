@@ -51,14 +51,18 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git add assets/data/steam.json static/steam-covers
+          git add assets/data/steam.json assets/data/sync-status.json static/steam-covers
           if git diff --staged --quiet; then
             echo "No steam changes."
             exit 0
           fi
           git config user.name "white1213-bot"
           git config user.email "1665491507a@gmail.com"
-          git commit -m "chore: sync steam library"
+          if git diff --staged --name-only | grep -qv 'assets/data/sync-status.json'; then
+            git commit -m "chore: sync steam library"
+          else
+            git commit -m "chore: steam check-in (no data changes)"
+          fi
           for attempt in 1 2 3; do
             git fetch origin main
             if git rebase origin/main && git push origin HEAD:main; then
