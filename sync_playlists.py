@@ -13,6 +13,7 @@
 重复导入同一歌单会更新内容而不是重复添加。
 """
 import json
+import os
 import random
 import re
 import sys
@@ -162,6 +163,8 @@ def main(argv):
         json.dumps(ordered, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
     print("💾 已写入 {} 个歌单 -> {}".format(len(ordered), DATA_FILE))
+    # -I 隔离模式下脚本目录不进 sys.path,显式加上才能 import 同目录的 sync_status
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     import sync_status
     sync_status.mark("playlists")
     return 0

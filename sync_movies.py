@@ -384,6 +384,8 @@ def main() -> int:
     else:
         print("☕ 没有变化，本地已是最新。")
 
+    # -I 隔离模式下脚本目录不进 sys.path,显式加上才能 import 同目录的 sync_status
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     import sync_status
     sync_status.mark("movies")
 

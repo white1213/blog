@@ -5,9 +5,17 @@
     "cover": "playlist-covers/9061797457.jpg",
     "desc": "",
     "creator": "归心.",
-    "song_count": 518,
+    "song_count": 519,
     "source_url": "https://y.qq.com/n/ryqq/playlist/9061797457",
     "songs": [
+      {
+        "name": "站台",
+        "singers": "汪苏泷",
+        "album": "传世乐章",
+        "interval": 286,
+        "songmid": "00228opM1DPUmH",
+        "cover": "https://y.gtimg.cn/music/photo_new/T002R300x300M000000CMxvP3yRuvR.jpg"
+      },
       {
         "name": "你最近好吗",
         "singers": "汪苏泷",
