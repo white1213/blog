@@ -5,6 +5,11 @@
   {{ .Description | default .Title }}
 </div>
 
+<div class="page-search">
+  <input type="search" id="playlist-search" placeholder="搜歌名、歌手或专辑…" autocomplete="off" aria-label="搜索歌曲">
+  <span class="page-search-count" id="playlist-search-count" aria-live="polite"></span>
+</div>
+
 {{ $playlists := resources.Get "data/playlists.json" | transform.Unmarshal }}
 
 {{ if not $playlists }}

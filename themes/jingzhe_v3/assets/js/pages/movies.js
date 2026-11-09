@@ -54,4 +54,33 @@ document.addEventListener("DOMContentLoaded", () => {
       updatePagination();
     });
   }
+
+  // 本站:页内搜索,输入即过滤(片名+年份);搜索态隐藏翻页按钮,清空恢复
+  const searchInput = document.getElementById('movie-search');
+  const searchCount = document.getElementById('movie-search-count');
+  if (searchInput && searchCount) {
+    const searchable = allMovies.map(card => {
+      const title = (card.querySelector('.rc-title')?.textContent || '').trim().toLowerCase();
+      const year = (card.querySelector('.movie-year')?.textContent || '').trim();
+      return { card, text: `${title} ${year}`.trim() };
+    });
+
+    searchInput.addEventListener('input', () => {
+      const query = searchInput.value.trim().toLowerCase();
+      if (!query) {
+        searchCount.textContent = '';
+        if (btnLoadMore) btnLoadMore.hidden = false;
+        updatePagination();
+        return;
+      }
+      let hits = 0;
+      searchable.forEach(({ card, text }) => {
+        const match = text.includes(query);
+        card.classList.toggle('is-hidden', !match);
+        if (match) hits += 1;
+      });
+      if (btnLoadMore) btnLoadMore.hidden = true;
+      searchCount.textContent = hits > 0 ? `找到 ${hits} 部` : '没有找到';
+    });
+  }
 });

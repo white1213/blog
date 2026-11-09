@@ -267,3 +267,35 @@
     display: none;
   }
 }
+
+/* 本站:页内搜索 */
+.page-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 18px;
+}
+.page-search input {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 14px;
+  font: inherit;
+  font-size: 0.86rem;
+  color: var(--text-content-color);
+  background: var(--background-card-color);
+  border: 1px solid rgba(120, 110, 90, 0.28);
+  border-radius: 10px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+.page-search input:focus {
+  border-color: var(--text-highlight-color);
+}
+.page-search input::placeholder {
+  color: var(--text-info-color);
+}
+.page-search-count {
+  font-size: 0.78rem;
+  color: var(--text-info-color);
+  white-space: nowrap;
+}

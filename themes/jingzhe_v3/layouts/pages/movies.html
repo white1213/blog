@@ -31,6 +31,11 @@
   <div class="movie-stat"><b>{{ $fiveCount }}</b><span>五星佳作</span></div>
 </div>
 
+<div class="page-search">
+  <input type="search" id="movie-search" placeholder="搜片名或年份…" autocomplete="off" aria-label="搜索影视">
+  <span class="page-search-count" id="movie-search-count" aria-live="polite"></span>
+</div>
+
 <div id="movie-list" class="ticket-layout">
   {{ range $index, $movie := $movies }}
     {{ $rating := int (default 0 $movie.rating) }}
