@@ -5,11 +5,6 @@
   {{ .Description | default .Title }}
 </div>
 
-<div class="page-search">
-  <input type="search" id="playlist-search" placeholder="搜歌名、歌手或专辑…" autocomplete="off" aria-label="搜索歌曲">
-  <span class="page-search-count" id="playlist-search-count" aria-live="polite"></span>
-</div>
-
 {{ $playlists := resources.Get "data/playlists.json" | transform.Unmarshal }}
 
 {{ if not $playlists }}
@@ -18,8 +13,26 @@
   <p class="pl-empty-hint">把 QQ 音乐歌单链接发给我，或者运行 <code>python sync_playlists.py &lt;链接&gt;</code> 导入。</p>
 </div>
 {{ else }}
-{{ range $playlists }}
-<section class="pl-card">
+
+{{/* 歌单切换 tabs:点击切换显示的歌单 */}}
+<div class="pl-tabs" role="tablist" aria-label="歌单切换">
+  {{ range $i, $p := $playlists }}
+  <button class="pl-tab{{ if eq $i 0 }} is-active{{ end }}" type="button" role="tab"
+          data-pl-index="{{ $i }}"
+          aria-selected="{{ if eq $i 0 }}true{{ else }}false{{ end }}">
+    <span class="pl-tab-name">{{ .name }}</span>
+    <span class="pl-tab-count" data-total="{{ .song_count }} 首">{{ .song_count }} 首</span>
+  </button>
+  {{ end }}
+</div>
+
+<div class="page-search">
+  <input type="search" id="playlist-search" placeholder="搜歌名、歌手或专辑…" autocomplete="off" aria-label="搜索歌曲">
+  <span class="page-search-count" id="playlist-search-count" aria-live="polite"></span>
+</div>
+
+{{ range $i, $p := $playlists }}
+<section class="pl-card{{ if ne $i 0 }} is-hidden{{ end }}" data-pl-index="{{ $i }}">
   <header class="pl-head">
     <a class="pl-cover" href="{{ .source_url }}" target="_blank" rel="noopener" aria-label="在 QQ 音乐打开《{{ .name }}》">
       {{ if .cover }}
@@ -63,7 +76,8 @@
     {{ end }}
   </ol>
 
-  {{ if gt (len .songs) 20 }}
+  {{/* 折叠阈值 15 首,所以超过 15 首就要给展开按钮(此前写成 20 会导致 16-20 首的歌永久隐藏) */}}
+  {{ if gt (len .songs) 15 }}
   <button class="pl-more" type="button" data-total="{{ .song_count }}">展开全部 {{ .song_count }} 首</button>
   {{ end }}
 </section>
