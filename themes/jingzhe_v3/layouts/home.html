@@ -65,7 +65,19 @@
       {{ end }}
     {{ end }}
     {{ if $hasSync }}
-      <div class="home-updated">数据更新于 {{ $latest.Format "2006-01-02 15:04" }}{{ if eq ($latest.Format "2006-01-02") (now.Format "2006-01-02") }} · 今日已自动同步 ✓{{ else }} · 今日尚未同步{{ end }}</div>
+      {{/* 逐项同步状态:各源检查时间是今天则 ✓,否则 ✗(一眼看出哪项今天没跑) */}}
+      {{ $labels := dict "movies" "豆瓣" "playlists" "歌单" "steam" "Steam" "exercise" "运动" }}
+      {{ $today := now.Format "2006-01-02" }}
+      <div class="home-updated">
+        数据更新于 {{ $latest.Format "2006-01-02 15:04" }} ·
+        {{ range $k, $v := $sync }}
+          {{ with $v }}
+            {{ $t := time.AsTime . }}
+            {{ $ok := eq ($t.Format "2006-01-02") $today }}
+            <span class="sync-item{{ if $ok }} is-ok{{ else }} is-stale{{ end }}">{{ index $labels $k }} {{ if $ok }}✓{{ else }}✗{{ end }}</span>
+          {{ end }}
+        {{ end }}
+      </div>
     {{ else }}
       <div class="home-updated">数据更新于 {{ now.Format "2006-01-02 15:04" }}</div>
     {{ end }}

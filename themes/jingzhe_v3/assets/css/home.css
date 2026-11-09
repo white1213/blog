@@ -145,3 +145,17 @@
   color: var(--text-info-color);
   opacity: 0.75;
 }
+
+/* 本站:逐项同步状态,今天跑过的亮色✓,没跑的暗红✗ */
+.home-updated .sync-item {
+  margin-right: 8px;
+  white-space: nowrap;
+}
+.home-updated .sync-item.is-ok {
+  color: var(--text-highlight-color);
+  opacity: 1;
+}
+.home-updated .sync-item.is-stale {
+  color: #c0564a;
+  opacity: 1;
+}
