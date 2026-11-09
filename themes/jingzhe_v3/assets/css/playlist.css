@@ -144,6 +144,12 @@
   display: none !important;
 }
 
+/* 歌单切换:非当前歌单整体隐藏。is-hidden 在各处按元素类型分别定义,
+   必须为 .pl-card 补一条,否则标签切换时两个歌单会同时显示 */
+.pl-card.is-hidden {
+  display: none !important;
+}
+
 .pl-no {
   font-family: "GeistMono", monospace;
   font-size: 0.78rem;
