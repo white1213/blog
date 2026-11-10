@@ -5,9 +5,25 @@
     "cover": "playlist-covers/9061797457.jpg",
     "desc": "",
     "creator": "归心.",
-    "song_count": 519,
+    "song_count": 521,
     "source_url": "https://y.qq.com/n/ryqq/playlist/9061797457",
     "songs": [
+      {
+        "name": "等我回家",
+        "singers": "薛之谦",
+        "album": "意外",
+        "interval": 297,
+        "songmid": "001sBy9d0RzXkR",
+        "cover": "https://y.gtimg.cn/music/photo_new/T002R300x300M000000QgFcm0v8WaF.jpg"
+      },
+      {
+        "name": "走走",
+        "singers": "李荣浩",
+        "album": "黑马",
+        "interval": 303,
+        "songmid": "0017wc9t3bkNwo",
+        "cover": "https://y.gtimg.cn/music/photo_new/T002R300x300M000004HaG7p4ZkhXA.jpg"
+      },
       {
         "name": "站台",
         "singers": "汪苏泷",
