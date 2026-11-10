@@ -29,6 +29,9 @@ jobs:
           extended: true
 
       - name: Build
+        # Hugo 的 now 取机器本地时区（runner 默认 UTC），首页"今日是否同步"依赖它，固定北京时间
+        env:
+          TZ: Asia/Shanghai
         run: hugo --minify --panicOnWarning
 
       # 直接发布到 gh-pages 分支，由 Pages 从分支构建。

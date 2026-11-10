@@ -17,6 +17,10 @@ runs:
 
     - name: Build
       shell: bash
+      # Hugo 的 now 取的是机器本地时区（gitHub runner 默认 UTC），
+      # 首页"今日是否同步"按 now 判断日期，必须固定为北京时间，否则北京时间 0-8 点会全部误判
+      env:
+        TZ: Asia/Shanghai
       run: hugo --minify --panicOnWarning
 
     - name: Deploy to gh-pages branch
