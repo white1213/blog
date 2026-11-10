@@ -46,14 +46,14 @@ jobs:
         if: always()
         run: rm -f /tmp/steam.env
 
-      # GITHUB_TOKEN 的 push 不触发其他工作流，提交后主动点燃部署。
-      - name: Commit and trigger deploy
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # 同步成功后直接构建并发布到 gh-pages（复合 action），不依赖额外的 Deploy job。
+      - name: Commit changes
+        id: commit
         run: |
           git add assets/data/steam.json assets/data/sync-status.json static/steam-covers
           if git diff --staged --quiet; then
             echo "No steam changes."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name "white1213-bot"
@@ -66,14 +66,16 @@ jobs:
           for attempt in 1 2 3; do
             git fetch origin main
             if git rebase origin/main && git push origin HEAD:main; then
-              curl -sf -X POST \
-                -H "Authorization: Bearer $GH_TOKEN" \
-                -H "Accept: application/vnd.github+json" \
-                https://api.github.com/repos/white1213/blog/actions/workflows/deploy.yml/dispatches \
-                -d '{"ref":"main"}'
+              echo "changed=true" >> "$GITHUB_OUTPUT"
               exit 0
             fi
             git rebase --abort 2>/dev/null || true
           done
           echo "::error::push failed after retries"
           exit 1
+
+      - name: Build and deploy
+        if: steps.commit.outputs.changed == 'true'
+        uses: ./.github/actions/build-deploy
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}

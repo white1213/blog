@@ -1,0 +1,30 @@
+name: Build and deploy Hugo site
+description: 构建站点并推送到 gh-pages 分支（供同步类工作流在提交数据后直接发布，不依赖额外的 Deploy job）
+
+inputs:
+  token:
+    description: 具备 contents:write 的 token
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Hugo Extended
+      uses: peaceiris/actions-hugo@v3
+      with:
+        hugo-version: "latest"
+        extended: true
+
+    - name: Build
+      shell: bash
+      run: hugo --minify --panicOnWarning
+
+    - name: Deploy to gh-pages branch
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ inputs.token }}
+        publish_dir: ./public
+        publish_branch: gh-pages
+        force_orphan: true
+        user_name: white1213-bot
+        user_email: 1665491507a@gmail.com

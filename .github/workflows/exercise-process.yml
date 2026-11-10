@@ -49,11 +49,9 @@ jobs:
           NOMINATIM_REFERER: "https://white1213.github.io/blog/"
         run: python process_activities.py
 
-      # GITHUB_TOKEN 的 push 不触发其他工作流，因此提交产物后主动点燃 deploy。
-      - name: Commit and trigger deploy
+      # 处理产物提交后直接构建并发布（复合 action），不依赖额外的 Deploy job。
+      - name: Commit changes
         id: commit
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "white1213-bot"
           git config user.email "1665491507a@gmail.com"
@@ -75,14 +73,15 @@ jobs:
             fi
             if git rebase origin/main && git push origin HEAD:main; then
               echo "changed=true" >> "$GITHUB_OUTPUT"
-              curl -sf -X POST \
-                -H "Authorization: Bearer $GH_TOKEN" \
-                -H "Accept: application/vnd.github+json" \
-                https://api.github.com/repos/white1213/blog/actions/workflows/deploy.yml/dispatches \
-                -d '{"ref":"main"}'
               exit 0
             fi
             git rebase --abort 2>/dev/null || true
           done
           echo "::error::push failed after retries"
           exit 1
+
+      - name: Build and deploy
+        if: steps.commit.outputs.changed == 'true'
+        uses: ./.github/actions/build-deploy
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
