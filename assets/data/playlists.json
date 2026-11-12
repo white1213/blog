@@ -5,9 +5,17 @@
     "cover": "playlist-covers/9061797457.jpg",
     "desc": "",
     "creator": "归心.",
-    "song_count": 521,
+    "song_count": 522,
     "source_url": "https://y.qq.com/n/ryqq/playlist/9061797457",
     "songs": [
+      {
+        "name": "来不及",
+        "singers": "刘瑞琦",
+        "album": "晚安，琦",
+        "interval": 258,
+        "songmid": "0031Bum640mLPV",
+        "cover": "https://y.gtimg.cn/music/photo_new/T002R300x300M000000n3Mr638hYHN.jpg"
+      },
       {
         "name": "等我回家",
         "singers": "薛之谦",
