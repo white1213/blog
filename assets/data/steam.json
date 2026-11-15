@@ -44,7 +44,7 @@
     "name": "The Binding of Isaac: Rebirth",
     "minutes": 3925,
     "hours": 65.4,
-    "recent": true,
+    "recent": false,
     "cover": "steam-covers/250900.jpg"
   },
   {
@@ -268,7 +268,7 @@
     "name": "Cry of Fear",
     "minutes": 22,
     "hours": 0.4,
-    "recent": true,
+    "recent": false,
     "cover": "steam-covers/223710.jpg"
   },
   {
