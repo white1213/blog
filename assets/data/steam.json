@@ -248,6 +248,14 @@
     "cover": "steam-covers/397540.jpg"
   },
   {
+    "appid": 223710,
+    "name": "Cry of Fear",
+    "minutes": 42,
+    "hours": 0.7,
+    "recent": true,
+    "cover": "steam-covers/223710.jpg"
+  },
+  {
     "appid": 40990,
     "name": "Mafia",
     "minutes": 29,
@@ -262,14 +270,6 @@
     "hours": 0.4,
     "recent": false,
     "cover": "steam-covers/860510.jpg"
-  },
-  {
-    "appid": 223710,
-    "name": "Cry of Fear",
-    "minutes": 22,
-    "hours": 0.4,
-    "recent": false,
-    "cover": "steam-covers/223710.jpg"
   },
   {
     "appid": 537340,
