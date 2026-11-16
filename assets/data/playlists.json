@@ -5,9 +5,17 @@
     "cover": "playlist-covers/9061797457.jpg",
     "desc": "",
     "creator": "归心.",
-    "song_count": 522,
+    "song_count": 523,
     "source_url": "https://y.qq.com/n/ryqq/playlist/9061797457",
     "songs": [
+      {
+        "name": "在深秋",
+        "singers": "阿悄",
+        "album": "阿悄单曲集",
+        "interval": 294,
+        "songmid": "003E5Jvk05hkmT",
+        "cover": "https://y.gtimg.cn/music/photo_new/T002R300x300M0000031LVXe0DRIxZ.jpg"
+      },
       {
         "name": "来不及",
         "singers": "刘瑞琦",
