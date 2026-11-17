@@ -5,9 +5,17 @@
     "cover": "playlist-covers/9061797457.jpg",
     "desc": "",
     "creator": "归心.",
-    "song_count": 523,
+    "song_count": 524,
     "source_url": "https://y.qq.com/n/ryqq/playlist/9061797457",
     "songs": [
+      {
+        "name": "世界之巅",
+        "singers": "汪苏泷",
+        "album": "明日世界ACT I",
+        "interval": 190,
+        "songmid": "002DIIhu0OSRN1",
+        "cover": "https://y.gtimg.cn/music/photo_new/T002R300x300M000000A1M903iHvyT.jpg"
+      },
       {
         "name": "在深秋",
         "singers": "阿悄",
