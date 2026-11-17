@@ -6,11 +6,14 @@ theme = "jingzhe_v3"
 
 enableRobotsTXT = true
 hasCJKLanguage = true
-cleanDestinationDir = true
+
+# Hugo 0.167 起 cleanDestinationDir 顶层键废弃，改为 build.cleanDestinationDir.enable
+[build]
+  [build.cleanDestinationDir]
+    enable = true
 
 [module]
   [module.hugoVersion]
-    extended = true
     min = "0.158.0"
 
 [permalinks]

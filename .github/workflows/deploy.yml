@@ -22,11 +22,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Hugo Extended
+      - name: Setup Hugo
         uses: peaceiris/actions-hugo@v3
         with:
-          hugo-version: "latest"
-          extended: true
+          # 固定版本：0.170 起取消 extended 版、废弃 extended 参数
+          hugo-version: "0.170.0"
+          extended: false
 
       - name: Build
         # Hugo 的 now 取机器本地时区（runner 默认 UTC），首页"今日是否同步"依赖它，固定北京时间
