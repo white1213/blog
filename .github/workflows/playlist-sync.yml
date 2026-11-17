@@ -48,7 +48,7 @@ jobs:
         run: |
           git config user.name "white1213-bot"
           git config user.email "1665491507a@gmail.com"
-          git add assets/data/playlists.json assets/data/sync-status.json
+          git add assets/data/playlists.json assets/data/sync-status/playlists.json
           if [ -d static/playlist-covers ]; then
             git add static/playlist-covers
           fi
@@ -57,7 +57,7 @@ jobs:
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          if git diff --staged --name-only | grep -qv 'assets/data/sync-status.json'; then
+          if git diff --staged --name-only | grep -qv 'assets/data/sync-status/'; then
             git commit -m "chore: sync playlists"
           else
             git commit -m "chore: playlist check-in (no data changes)"

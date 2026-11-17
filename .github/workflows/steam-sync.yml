@@ -50,7 +50,7 @@ jobs:
       - name: Commit changes
         id: commit
         run: |
-          git add assets/data/steam.json assets/data/sync-status.json static/steam-covers
+          git add assets/data/steam.json assets/data/sync-status/steam.json static/steam-covers
           if git diff --staged --quiet; then
             echo "No steam changes."
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -58,7 +58,7 @@ jobs:
           fi
           git config user.name "white1213-bot"
           git config user.email "1665491507a@gmail.com"
-          if git diff --staged --name-only | grep -qv 'assets/data/sync-status.json'; then
+          if git diff --staged --name-only | grep -qv 'assets/data/sync-status/'; then
             git commit -m "chore: sync steam library"
           else
             git commit -m "chore: steam check-in (no data changes)"

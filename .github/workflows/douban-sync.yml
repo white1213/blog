@@ -45,14 +45,14 @@ jobs:
       # 同步成功后直接构建并发布到 gh-pages（复合 action）。
       # 不再 dispatch deploy.yml：那个独立 job 多次长时间排队拿不到 runner，
       # 会造成"数据已提交但网站不更新"。
-      # 心跳设计：sync-status.json 每次必更新，无数据变化的日子也有提交+部署，
+      # 心跳设计：sync-status/<源>.json 每次必更新，无数据变化的日子也有提交+部署，
       # 首页的逐项同步状态由此点亮。
       - name: Commit changes
         id: commit
         run: |
           git config user.name "white1213-bot"
           git config user.email "1665491507a@gmail.com"
-          git add assets/data/movies.json assets/data/sync-status.json
+          git add assets/data/movies.json assets/data/sync-status/movies.json
           if [ -d static/movies-covers ]; then
             git add static/movies-covers
           fi
@@ -61,7 +61,7 @@ jobs:
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          if git diff --staged --name-only | grep -qv 'assets/data/sync-status.json'; then
+          if git diff --staged --name-only | grep -qv 'assets/data/sync-status/'; then
             git commit -m "chore: sync douban movies"
           else
             git commit -m "chore: douban check-in (no data changes)"

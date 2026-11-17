@@ -52,29 +52,33 @@
       <a class="home-stat" href="{{ "playlist/" | relURL }}"><b>{{ $songCount }}</b> 首歌</a>
       <a class="home-stat" href="{{ "games/" | relURL }}"><b>{{ $gameCount }}</b> 款游戏 · <b>{{ $gameHoursRounded }}</b> 小时</a>
     </div>
-    {{/* 时间戳语义：数据真实变化时间（读 sync-status.json 各源最新检查时间），而非构建时间；
-         今天有任一源同步过则追加"今日已自动同步"。无状态文件时退回构建时间。 */}}
-    {{ $sync := resources.Get "data/sync-status.json" | transform.Unmarshal }}
+    {{/* 逐项同步状态：每个源一个状态文件 assets/data/sync-status/<key>.json。
+         分成多文件是为了让并发运行的同步任务不争同一个文件（rebase 不会冲突）。
+         时间戳语义＝各源最近一次检查时间；与今天同日则视为"已同步"。 */}}
+    {{ $sources := slice
+      (dict "key" "movies" "label" "豆瓣")
+      (dict "key" "playlists" "label" "歌单")
+      (dict "key" "steam" "label" "Steam")
+    }}
     {{ $latest := time.AsTime "1970-01-01T00:00:00Z" }}
     {{ $hasSync := false }}
-    {{ range $v := $sync }}
-      {{ with $v }}
+    {{ range $sources }}
+      {{ with resources.Get (printf "data/sync-status/%s.json" .key) }}
         {{ $hasSync = true }}
-        {{ $t := time.AsTime . }}
+        {{ $t := .Content | transform.Unmarshal | time.AsTime }}
         {{ if $t.After $latest }}{{ $latest = $t }}{{ end }}
       {{ end }}
     {{ end }}
     {{ if $hasSync }}
-      {{/* 逐项同步状态:各源检查时间是今天则 ✓,否则 ✗(一眼看出哪项今天没跑) */}}
-      {{ $labels := dict "movies" "豆瓣" "playlists" "歌单" "steam" "Steam" "exercise" "运动" }}
       {{ $today := now.Format "2006-01-02" }}
       <div class="home-updated">
         数据更新于 {{ $latest.Format "2006-01-02 15:04" }} ·
-        {{ range $k, $v := $sync }}
-          {{ with $v }}
-            {{ $t := time.AsTime . }}
+        {{ range $sources }}
+          {{ $label := .label }}
+          {{ with resources.Get (printf "data/sync-status/%s.json" .key) }}
+            {{ $t := .Content | transform.Unmarshal | time.AsTime }}
             {{ $ok := eq ($t.Format "2006-01-02") $today }}
-            <span class="sync-item{{ if $ok }} is-ok{{ else }} is-stale{{ end }}">{{ index $labels $k }} {{ if $ok }}✓{{ else }}✗{{ end }}</span>
+            <span class="sync-item{{ if $ok }} is-ok{{ else }} is-stale{{ end }}">{{ $label }} {{ if $ok }}✓{{ else }}✗{{ end }}</span>
           {{ end }}
         {{ end }}
       </div>
