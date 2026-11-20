@@ -1,6 +1,8 @@
-.DS_Store
-.hugo_build.lock
-public/
-resources/
+# Python 运行产物：pyc 每次运行都会变，进仓库会阻塞 CI 的 git rebase
 __pycache__/
 *.pyc
+# Hugo 构建锁
+.hugo_build.lock
+# 本地构建产物
+public/
+resources/
