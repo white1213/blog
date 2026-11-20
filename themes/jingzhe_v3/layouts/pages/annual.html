@@ -1,0 +1,311 @@
+{{ define "body_classes" }}page-annual{{ end }}
+{{ define "title" }}{{ .Params.year }} 数据年报{{ end }}
+
+{{ define "main" }}
+{{ $year := printf "%d" (int (default (now.Year) .Params.year)) }}
+
+{{ $movies := resources.Get "data/movies.json" | transform.Unmarshal }}
+{{ $acts := resources.Get "data/exercise/activities.json" | transform.Unmarshal }}
+{{ $playlists := resources.Get "data/playlists.json" | transform.Unmarshal }}
+{{ $games := resources.Get "data/steam.json" | transform.Unmarshal }}
+{{ $posts := where site.RegularPages "Type" "in" (slice "posts" "laodao") }}
+{{ $yearPosts := slice }}
+{{ range $posts }}
+  {{ if eq (printf "%d" .Date.Year) $year }}
+    {{ $yearPosts = $yearPosts | append . }}
+  {{ end }}
+{{ end }}
+{{ $postCount := len $yearPosts }}
+
+{{/* ===== 年度过滤（create_time / start_date_local 均为本地时区字符串，取前 4 位即年份） ===== */}}
+{{ $mv := slice }}
+{{ range $movies }}
+  {{ if and .create_time (eq (substr .create_time 0 4) $year) }}
+    {{ $mv = $mv | append . }}
+  {{ end }}
+{{ end }}
+{{ $ar := slice }}
+{{ range $acts }}
+  {{ if and .start_date_local (eq (substr (string .start_date_local) 0 4) $year) }}
+    {{ $ar = $ar | append . }}
+  {{ end }}
+{{ end }}
+
+{{/* ===== 影视统计 ===== */}}
+{{ $mvRated := where $mv "rating" ">" 0 }}
+{{ $mvFive := where $mvRated "rating" "=" 5 }}
+{{ $mvTv := where $mv "type" "=" "tv" }}
+{{ $mvMovie := where $mv "type" "=" "movie" }}
+{{ $mvTop := slice }}
+{{ if gt (len $mvRated) 0 }}
+  {{ $mvTop = sort $mvRated "rating" "desc" }}
+{{ end }}
+{{ $mvFirst := false }}
+{{ $mvLast := false }}
+{{ if gt (len $mv) 0 }}
+  {{ $mvFirst = index (sort $mv "create_time" "asc") 0 }}
+  {{ $mvLast = index (sort $mv "create_time" "desc") 0 }}
+{{ end }}
+
+{{/* ===== 运动统计 ===== */}}
+{{ $runKm := 0.0 }}
+{{ $runSecs := 0 }}
+{{ $runLongest := false }}
+{{ range $ar }}
+  {{ $runKm = add $runKm (float (.distance | default 0)) }}
+  {{ $parts := split (string (.moving_time | default "0:00")) ":" }}
+  {{ $secs := 0 }}
+  {{ if eq (len $parts) 2 }}
+    {{ $secs = add (mul (float (index $parts 0)) 60.0) (float (index $parts 1)) }}
+  {{ else if eq (len $parts) 3 }}
+    {{ $secs = add (mul (float (index $parts 0)) 3600.0) (add (mul (float (index $parts 1)) 60.0) (float (index $parts 2))) }}
+  {{ end }}
+  {{ $runSecs = add $runSecs $secs }}
+  {{ if or (not $runLongest) (gt (float (.distance | default 0)) (float $runLongest.distance)) }}
+    {{ $runLongest = . }}
+  {{ end }}
+{{ end }}
+{{ $runMonths := dict }}
+{{ range $ar }}
+  {{ $m := substr (string .start_date_local) 5 2 }}
+  {{ $c := 0 }}
+  {{ with index $runMonths $m }}{{ $c = . }}{{ end }}
+  {{ $runMonths = merge $runMonths (dict $m (add $c 1)) }}
+{{ end }}
+{{ $monthPairs := slice }}
+{{ range $m, $c := $runMonths }}
+  {{ $monthPairs = $monthPairs | append (dict "m" $m "c" $c) }}
+{{ end }}
+{{ $topMonth := false }}
+{{ if gt (len $monthPairs) 0 }}
+  {{ $topMonth = index (sort $monthPairs "c" "desc") 0 }}
+{{ end }}
+
+{{/* ===== 音乐现状快照 ===== */}}
+{{ $songCount := 0 }}
+{{ $songSecs := 0 }}
+{{ $singerPairs := slice }}
+{{ $singers := dict }}
+{{ range $playlists }}
+  {{ range .songs }}
+    {{ $songCount = add $songCount 1 }}
+    {{ $songSecs = add $songSecs (int (.interval | default 0)) }}
+    {{ range split (.singers | default "") "/" }}
+      {{ $name := trim . " " }}
+      {{ if $name }}
+        {{ $c := 0 }}
+        {{ with index $singers $name }}{{ $c = . }}{{ end }}
+        {{ $singers = merge $singers (dict $name (add $c 1)) }}
+      {{ end }}
+    {{ end }}
+  {{ end }}
+{{ end }}
+{{ range $name, $c := $singers }}
+  {{ $singerPairs = $singerPairs | append (dict "name" $name "count" $c) }}
+{{ end }}
+{{ $topSingers := sort $singerPairs "count" "desc" }}
+
+{{/* ===== 游戏现状快照 ===== */}}
+{{ $gameHours := 0.0 }}
+{{ range $games }}{{ $gameHours = add $gameHours (float (.hours | default 0)) }}{{ end }}
+{{ $gameTop := slice }}
+{{ if gt (len $games) 0 }}{{ $gameTop = sort $games "hours" "desc" }}{{ end }}
+
+<div class="annual">
+  <div class="annual-head">
+    <p class="annual-eyebrow">ANNUAL REPORT · {{ $year }}</p>
+    <h1>{{ $year }} 数据年报</h1>
+    <p class="annual-note">随构建自动更新 · {{ if now.After (time (printf "%s-12-31T23:59:59+08:00" $year)) }}已完整收录全年{{ else }}年度尚未结束，数字持续累积中{{ end }}</p>
+  </div>
+
+  {{/* ===== 开场总览 ===== */}}
+  <section class="annual-block">
+    <p class="annual-line">这一年，你在这里留下了</p>
+    <div class="annual-bigrow">
+      <span class="annual-big"><b>{{ len $mv }}</b><i>部影视</i></span>
+      <span class="annual-big"><b>{{ len $ar }}</b><i>次奔跑</i></span>
+      <span class="annual-big"><b>{{ $songCount }}</b><i>首歌单</i></span>
+      <span class="annual-big"><b>{{ printf "%.0f" $gameHours }}</b><i>小时游戏</i></span>
+    </div>
+    <p class="annual-line">以及 <b>{{ $postCount }}</b> 篇文字。数据不会说话，但它们替你记得。</p>
+  </section>
+
+  {{/* ===== 影视 ===== */}}
+  {{ if gt (len $mv) 0 }}
+  <section class="annual-block">
+    <p class="annual-eyebrow">SCREEN · 银幕</p>
+    <h2>{{ len $mv }} 部影视，{{ len $mvRated }} 部打了分</h2>
+    {{ if gt (len $mvFive) 0 }}
+    <p class="annual-line">其中 <b>{{ len $mvFive }}</b> 部拿到五星——五星率 <b>{{ printf "%.0f" (mul 100 (div (float (len $mvFive)) (float (len $mvRated)))) }}%</b>。你今年舍得打五星。</p>
+    {{ end }}
+    {{ if and (gt (len $mvTv) 0) (eq (len $mvMovie) 1) }}
+    <p class="annual-line">几乎全是<b>剧</b>：{{ len $mvTv }} 部剧集对 {{ len $mvMovie }} 部电影。你是标准的追剧型观众。</p>
+    {{ end }}
+    {{ with $mvFirst }}
+    <p class="annual-line">年初第一部是<b>《{{ .title }}》</b>{{ with $mvLast }}，最近一部是<b>《{{ .title }}》</b>。{{ end }}</p>
+    {{ end }}
+    {{ if gt (len $mvTop) 0 }}
+    <p class="annual-line">你的年度五星之选：</p>
+    <ol class="annual-list">
+      {{ range first 3 $mvTop }}
+      <li>《{{ .title }}》（{{ .year }}）{{ if .rating }} · {{ .rating }} 星{{ end }}</li>
+      {{ end }}
+    </ol>
+    {{ end }}
+  </section>
+  {{ end }}
+
+  {{/* ===== 运动 ===== */}}
+  {{ if gt (len $ar) 0 }}
+  <section class="annual-block">
+    <p class="annual-eyebrow">RUN · 脚下</p>
+    <h2>{{ len $ar }} 次奔跑，{{ printf "%.0f" $runKm }} 公里</h2>
+    {{ if gt $runSecs 0 }}
+    <p class="annual-line">累计在路上 <b>{{ printf "%.1f" (div (float $runSecs) 3600.0) }}</b> 小时{{ if $topMonth }}，最勤快的是 <b>{{ printf "%d" (int (float (index $topMonth "m"))) }} 月</b>（{{ index $topMonth "c" }} 次）。{{ end }}</p>
+    {{ end }}
+    {{ with $runLongest }}
+    <p class="annual-line">单次最长的一次：<b>{{ printf "%.1f" (float .distance) }} 公里</b>（{{ substr (string .start_date_local) 0 10 }}）。</p>
+    {{ end }}
+    <p class="annual-line">{{ printf "%.0f" $runKm }} 公里，够从家门口跑出去再跑回来，还要多绕几圈。</p>
+  </section>
+  {{ end }}
+
+  {{/* ===== 音乐（现状快照） ===== */}}
+  {{ if gt $songCount 0 }}
+  <section class="annual-block">
+    <p class="annual-eyebrow">MUSIC · 耳边</p>
+    <h2>{{ $songCount }} 首歌躺在歌单里</h2>
+    <p class="annual-line">连起来能听 <b>{{ printf "%.1f" (div (float $songSecs) 3600.0) }}</b> 小时。听得最多的歌手：</p>
+    {{ if gt (len $topSingers) 0 }}
+    <ol class="annual-list">
+      {{ range first 3 $topSingers }}
+      <li>{{ .name }} · {{ .count }} 首</li>
+      {{ end }}
+    </ol>
+    {{ end }}
+    <p class="annual-note-sm">音乐与游戏暂无时间维度记录（从今年 12 月起每月存快照，明年年报可回看全年变化）。</p>
+  </section>
+  {{ end }}
+
+  {{/* ===== 游戏（现状快照） ===== */}}
+  {{ if gt (len $games) 0 }}
+  <section class="annual-block">
+    <p class="annual-eyebrow">GAME · 屏幕</p>
+    <h2>{{ len $games }} 款游戏，{{ printf "%.0f" $gameHours }} 小时</h2>
+    {{ if gt (len $gameTop) 0 }}
+    <p class="annual-line">时间花得最多的是：</p>
+    <ol class="annual-list">
+      {{ range first 3 $gameTop }}
+      <li>{{ .name }} · {{ .hours }} 小时</li>
+      {{ end }}
+    </ol>
+    {{ end }}
+    <p class="annual-note-sm">截至本次构建的累计数据。</p>
+  </section>
+  {{ end }}
+
+  {{/* ===== 文字 ===== */}}
+  <section class="annual-block">
+    <p class="annual-eyebrow">WRITE · 笔下</p>
+    <h2>{{ $postCount }} 篇文字</h2>
+    {{ if gt $postCount 0 }}
+    <p class="annual-line">这一年你开始写字了。数字不大，但从 0 到 1 是最难的一步。</p>
+    <ol class="annual-list">
+      {{ range first 3 (sort $yearPosts "Date" "asc") }}
+      <li><a href="{{ .RelPermalink }}">{{ .Title }}</a></li>
+      {{ end }}
+    </ol>
+    {{ else }}
+    <p class="annual-line">今年还没有动笔。数据页都搭好了，就差你的故事。</p>
+    {{ end }}
+  </section>
+
+  <p class="annual-footnote">本页由站点数据在构建时自动生成 · 生成于 {{ now.Format "2006-01-02 15:04" }}（北京时间）</p>
+</div>
+
+<style>
+.annual {
+  max-width: 620px;
+  margin: 0 auto;
+}
+.annual-head {
+  text-align: center;
+  padding: 28px 0 8px;
+}
+.annual-eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  color: var(--text-info-color);
+  margin: 0 0 6px;
+}
+.annual-head h1 {
+  margin: 0 0 8px;
+  font-size: 1.7rem;
+}
+.annual-note {
+  font-size: 0.78rem;
+  color: var(--text-info-color);
+  margin: 0;
+}
+.annual-block {
+  margin: 26px 0;
+  padding: 20px 22px;
+  border-radius: 14px;
+  background: var(--background-card-color);
+  border: 1px solid rgba(120, 110, 90, 0.16);
+}
+.annual-block h2 {
+  font-size: 1.12rem;
+  margin: 4px 0 12px;
+}
+.annual-line {
+  margin: 9px 0;
+  line-height: 1.75;
+}
+.annual-line b {
+  color: var(--text-highlight-color);
+}
+.annual-bigrow {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin: 14px 0;
+}
+.annual-big {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 6px;
+  border-radius: 10px;
+  background: rgba(120, 110, 90, 0.08);
+}
+.annual-big b {
+  font-size: 1.45rem;
+  color: var(--text-highlight-color);
+}
+.annual-big i {
+  font-style: normal;
+  font-size: 0.76rem;
+  color: var(--text-info-color);
+}
+.annual-list {
+  margin: 8px 0 4px;
+  padding-left: 22px;
+  line-height: 1.8;
+}
+.annual-note-sm {
+  font-size: 0.74rem;
+  color: var(--text-info-color);
+  margin: 10px 0 0;
+}
+.annual-footnote {
+  text-align: center;
+  font-size: 0.74rem;
+  color: var(--text-info-color);
+  margin: 20px 0 40px;
+}
+@media (min-width: 480px) {
+  .annual-bigrow { grid-template-columns: repeat(4, 1fr); }
+}
+</style>
+{{ end }}

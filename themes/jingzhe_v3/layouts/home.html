@@ -120,6 +120,12 @@
     <div class="home-card-num">{{ $gameCount }} 款 · {{ $gameHoursRounded }} 小时</div>
     {{ with $topGame }}<div class="home-card-latest">最常玩：{{ .name }}</div>{{ end }}
   </a>
+  <a class="home-card home-card-annual" href="{{ "annual/" | relURL }}">
+    <div class="home-card-icon">📊</div>
+    <div class="home-card-name">{{ now.Year }} 年报</div>
+    <div class="home-card-num">影视 · 运动 · 音乐 · 游戏</div>
+    <div class="home-card-latest">这一年，数据替你记得</div>
+  </a>
 </div>
 
 {{/* ===== 最新动态时间流 ===== */}}

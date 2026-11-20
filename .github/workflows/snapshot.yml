@@ -1,0 +1,54 @@
+name: Monthly Snapshot
+
+# 每月 1 号存一份 Steam/歌单数据快照到 assets/data/snapshots/，
+# 为年度报告积累时间维度（steam.json 和 playlists.json 没有逐条时间戳）。
+# 只提交数据，不触发部署（快照不参与页面渲染）。
+
+on:
+  schedule:
+    # UTC 19:30（月末最后一天）= 北京时间 1 号 03:30
+    - cron: '30 19 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: snapshot
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Take snapshot
+        run: python -I snapshot_data.py
+
+      - name: Commit snapshot
+        run: |
+          git config user.name "white1213-bot"
+          git config user.email "1665491507a@gmail.com"
+          git add assets/data/snapshots
+          if git diff --staged --quiet; then
+            echo "No snapshot changes."
+            exit 0
+          fi
+          git commit -m "chore: monthly data snapshot"
+          for attempt in 1 2 3; do
+            git fetch origin main
+            if git rebase origin/main && git push origin HEAD:main; then
+              exit 0
+            fi
+            git rebase --abort 2>/dev/null || true
+          done
+          echo "::error::push failed after retries"
+          exit 1

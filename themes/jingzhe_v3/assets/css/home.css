@@ -159,3 +159,27 @@
   color: #c0564a;
   opacity: 1;
 }
+
+/* 年度报告横幅卡：独占一整行 */
+.home-card-annual {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  background: linear-gradient(135deg, rgba(120, 110, 90, 0.16), rgba(120, 110, 90, 0.04));
+}
+.home-card-annual .home-card-icon {
+  margin-bottom: 0;
+  font-size: 1.9rem;
+}
+.home-card-annual .home-card-name {
+  font-size: 1.05rem;
+  margin-bottom: 2px;
+}
+.home-card-annual .home-card-num {
+  margin-bottom: 0;
+}
+.home-card-annual .home-card-latest {
+  margin-left: auto;
+}
