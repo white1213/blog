@@ -5,9 +5,49 @@
     "cover": "playlist-covers/9061797457.jpg",
     "desc": "",
     "creator": "归心.",
-    "song_count": 521,
+    "song_count": 526,
     "source_url": "https://y.qq.com/n/ryqq/playlist/9061797457",
     "songs": [
+      {
+        "name": "陪你看星星",
+        "singers": "陈子晴",
+        "album": "陪你看星星",
+        "interval": 195,
+        "songmid": "004e70pP0Cd5Zm",
+        "cover": "https://y.gtimg.cn/music/photo_new/T002R300x300M000000rXOC52i5FSu.jpg"
+      },
+      {
+        "name": "小幸运",
+        "singers": "田馥甄",
+        "album": "我的少女时代 电影原声带",
+        "interval": 263,
+        "songmid": "001zgoLn3UZwoX",
+        "cover": "https://y.gtimg.cn/music/photo_new/T002R300x300M0000040aH1l3ykBRh.jpg"
+      },
+      {
+        "name": "世界之巅",
+        "singers": "汪苏泷",
+        "album": "明日世界ACT I",
+        "interval": 190,
+        "songmid": "002DIIhu0OSRN1",
+        "cover": "https://y.gtimg.cn/music/photo_new/T002R300x300M000000A1M903iHvyT.jpg"
+      },
+      {
+        "name": "在深秋",
+        "singers": "阿悄",
+        "album": "阿悄单曲集",
+        "interval": 294,
+        "songmid": "003E5Jvk05hkmT",
+        "cover": "https://y.gtimg.cn/music/photo_new/T002R300x300M0000031LVXe0DRIxZ.jpg"
+      },
+      {
+        "name": "来不及",
+        "singers": "刘瑞琦",
+        "album": "晚安，琦",
+        "interval": 258,
+        "songmid": "0031Bum640mLPV",
+        "cover": "https://y.gtimg.cn/music/photo_new/T002R300x300M000000n3Mr638hYHN.jpg"
+      },
       {
         "name": "等我回家",
         "singers": "薛之谦",
