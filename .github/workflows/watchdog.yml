@@ -1,0 +1,121 @@
+name: Watchdog
+
+# 可靠性看门狗：
+# 1. 每小时检查三个同步任务：某项超过 24h 没有成功、且最近一次运行（无论成败）超过 8h，
+#    自动补跑一次（8h 冷却自然把补跑限流在每天 3 次以内）。
+# 2. 某项连续 72h 没有成功 → 开/更新报警 issue（GitHub 会给仓库所有者发邮件）。
+# 3. 探测线上首页：HTTP 200 且「数据更新于」日期距今 ≤ 2 天；否则开 issue 报警，
+#    恢复后自动关闭。覆盖 Pages 构建/CDN/发布链路整体卡死的情况（2026-11-10 实际发生过）。
+# 看门狗自身尽量不因小故障退出（子步骤失败用 || true 兜住），保证每小时都有巡检记录。
+
+on:
+  schedule:
+    - cron: '23 * * * *'
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  issues: write
+  contents: read
+
+jobs:
+  patrol:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      REPO: white1213/blog
+      SITE: https://white1213.github.io/blog/
+    steps:
+      - name: Check sync workflows (retry stale, escalate if 72h)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -u
+          REPO="$REPO"
+          stale_list=""
+          for wf in douban-sync.yml playlist-sync.yml steam-sync.yml; do
+            last_ok=$(gh api "repos/$REPO/actions/workflows/$wf/runs?status=success&per_page=1" --jq '.workflow_runs[0].created_at' 2>/dev/null || echo "")
+            last_any=$(gh api "repos/$REPO/actions/workflows/$wf/runs?per_page=1" --jq '.workflow_runs[0].created_at' 2>/dev/null || echo "")
+            if [ -z "$last_ok" ]; then
+              echo "::error::$wf 从未成功运行过"
+              continue
+            fi
+            now=$(date +%s)
+            ok_ts=$(date -d "$last_ok" +%s)
+            any_ts=$(date -d "$last_any" +%s)
+            stale_h=$(( (now - ok_ts) / 3600 ))
+            quiet_h=$(( (now - any_ts) / 3600 ))
+            echo "$wf: 距上次成功 ${stale_h}h，距上次尝试 ${quiet_h}h"
+            if [ "$stale_h" -ge 24 ] && [ "$quiet_h" -ge 8 ]; then
+              echo "→ 补跑 $wf"
+              gh api -X POST "repos/$REPO/actions/workflows/$wf/dispatches" -f ref=main || \
+                echo "::warning::$wf 补跑触发失败"
+            fi
+            if [ "$stale_h" -ge 72 ]; then
+              stale_list="${stale_list}- ${wf}：已 ${stale_h} 小时没有成功运行\n"
+            fi
+          done
+
+          # 连续 72h 失败 → 报警 issue（创建即触发邮件；恢复后由下方步骤关闭）
+          if [ -n "$stale_list" ]; then
+            body=$(printf '自动巡检发现以下同步任务连续失败超过 72 小时：\n\n%s\n最近一次成功运行详见 Actions 页。人工排查步骤：\n1. 打开失败的 workflow run 看失败步骤\n2. 若是构建失败，大概率是数据/依赖变化，联系维护者（AI 会话）处理\n' "$stale_list")
+            num=$(gh issue list -R "$REPO" --state open --search "同步连续失败 in:title" --json number --jq '.[0].number' 2>/dev/null || echo "")
+            if [ -n "$num" ]; then
+              gh issue edit "$num" -R "$REPO" --body "$body" || true
+            else
+              gh issue create -R "$REPO" --title "⚠️ 同步连续失败超过 72 小时" --body "$body" || \
+                echo "::error::创建报警 issue 失败"
+            fi
+          else
+            # 全部恢复 → 关闭报警 issue
+            num=$(gh issue list -R "$REPO" --state open --search "同步连续失败 in:title" --json number --jq '.[0].number' 2>/dev/null || echo "")
+            if [ -n "$num" ]; then
+              gh issue close "$num" -R "$REPO" --comment "所有同步任务已恢复（各自 24h 内有成功运行），自动关闭。" || true
+            fi
+          fi
+        continue-on-error: true
+
+      - name: Probe live site (HTTP + content freshness)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -u
+          html=$(curl -fsS --max-time 20 "$SITE?wd=$RANDOM" 2>/dev/null) || html=""
+          page_date=$(printf '%s' "$html" | grep -o '数据更新于 [0-9-]\{10\}' | grep -o '[0-9-]\{10\}' | head -1)
+          today=$(TZ=Asia/Shanghai date +%F)
+          cutoff=$(TZ=Asia/Shanghai date -d "2 days ago" +%F)
+
+          if [ -z "$html" ]; then
+            verdict="HTTP_FAIL"
+          elif [ -z "$page_date" ]; then
+            verdict="CONTENT_FAIL"
+          elif [ "$page_date" \< "$cutoff" ]; then
+            verdict="STALE ($page_date 早于 $cutoff，发布链路可能卡住)"
+          else
+            verdict="OK ($page_date)"
+          fi
+          echo "网站探测结论: $verdict"
+
+          issue_num=$(gh issue list -R "$REPO" --state open --search "网站探测报警 in:title" --json number --jq '.[0].number' 2>/dev/null || echo "")
+
+          if [ "$verdict" = "OK" ]; then
+            if [ -n "$issue_num" ]; then
+              gh issue close "$issue_num" -R "$REPO" --comment "网站探测已恢复：$verdict，自动关闭。" || true
+            fi
+            exit 0
+          fi
+
+          # 探测异常：开 issue（首次）或刷新已有 issue
+          body=$(printf '自动巡检探测线上站点异常：%s\n\n地址：%s\n时间：%s\n\n可能原因：Pages 构建失败、发布链路卡死、或站点配置问题。' \
+            "$verdict" "$SITE" "$(TZ=Asia/Shanghai date '+%F %T')")
+
+          if [ -n "$issue_num" ]; then
+            gh issue edit "$issue_num" -R "$REPO" --body "$body" || true
+          else
+            gh issue create -R "$REPO" --title "⚠️ 网站探测报警" --body "$body" || \
+              echo "::error::创建探测报警 issue 失败"
+          fi
+        continue-on-error: true
+
+      - name: Heartbeat
+        run: echo "watchdog patrol done at $(TZ=Asia/Shanghai date '+%F %T')"
