@@ -26,6 +26,48 @@ SOURCES = {
 }
 
 
+def update_delta():
+    """生成 assets/data/steam-delta.json：最早快照 vs 当前 steam.json 的时长差分。
+
+    Steam 不提供"今年玩了多久"，靠快照差分得到"快照开启以来新增时长"。
+    每次 steam 同步后调用（快照每月一份，delta 每天刷新）。
+    """
+    steam = ROOT / "assets" / "data" / "steam.json"
+    if not steam.exists():
+        return
+    try:
+        current = json.loads(steam.read_text(encoding="utf-8"))
+    except Exception as exc:
+        print("跳过 delta: steam.json 不合法 ({})".format(exc))
+        return
+
+    snaps = sorted(SNAP_DIR.glob("steam-*.json"))
+    if not snaps:
+        print("跳过 delta: 还没有 steam 快照")
+        return
+    earliest = snaps[0]
+    since = earliest.stem.replace("steam-", "")
+    try:
+        baseline = json.loads(earliest.read_text(encoding="utf-8"))
+    except Exception as exc:
+        print("跳过 delta: 快照不合法 ({})".format(exc))
+        return
+    old = {int(g["appid"]): int(g.get("minutes") or 0) for g in baseline if g.get("appid")}
+
+    games = []
+    for g in current:
+        appid = int(g["appid"])
+        added = int(g.get("minutes") or 0) - old.get(appid, 0)
+        if added > 0:
+            games.append({"name": g.get("name", ""), "hours_added": round(added / 60, 1)})
+    games.sort(key=lambda x: -x["hours_added"])
+
+    out = {"since": since, "games": games}
+    dest = ROOT / "assets" / "data" / "steam-delta.json"
+    dest.write_text(json.dumps(out, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print("📈 已更新 steam-delta.json: since={} 新增游戏 {} 款".format(since, len(games)))
+
+
 def main():
     month = datetime.now(TZ_CN).strftime("%Y-%m")
     SNAP_DIR.mkdir(parents=True, exist_ok=True)
@@ -51,6 +93,7 @@ def main():
         written += 1
         print("📦 已存快照 {} ({} 条)".format(dest.name, len(payload) if isinstance(payload, list) else "dict"))
     print("本月共写入 {} 份快照 ({})".format(written, month))
+    update_delta()
     return 0
 
 

@@ -1,0 +1,13 @@
+{
+  "since": "2026-11",
+  "games": [
+    {
+      "name": "Cry of Fear",
+      "hours_added": 0.3
+    },
+    {
+      "name": "Resident Evil 5",
+      "hours_added": 0.1
+    }
+  ]
+}

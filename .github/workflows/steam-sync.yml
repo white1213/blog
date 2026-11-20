@@ -42,6 +42,10 @@ jobs:
       - name: Sync library
         run: python sync_steam.py /tmp/steam.env
 
+      # 刷新年报用的快照差分（steam-delta.json）；快照本身每月 1 号由 snapshot.yml 存
+      - name: Update steam delta
+        run: python -I snapshot_data.py
+
       - name: Cleanup credentials
         if: always()
         run: rm -f /tmp/steam.env
@@ -50,7 +54,7 @@ jobs:
       - name: Commit changes
         id: commit
         run: |
-          git add assets/data/steam.json assets/data/sync-status/steam.json static/steam-covers
+          git add assets/data/steam.json assets/data/steam-delta.json assets/data/snapshots assets/data/sync-status/steam.json static/steam-covers
           if git diff --staged --quiet; then
             echo "No steam changes."
             echo "changed=false" >> "$GITHUB_OUTPUT"

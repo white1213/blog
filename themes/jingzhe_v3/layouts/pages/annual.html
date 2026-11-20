@@ -46,6 +46,35 @@
   {{ $mvFirst = index (sort $mv "create_time" "asc") 0 }}
   {{ $mvLast = index (sort $mv "create_time" "desc") 0 }}
 {{ end }}
+{{ $mvHigh := where $mvRated "rating" ">=" 4 }}
+{{ $mvMonths := dict }}
+{{ range $mv }}
+  {{ $m := substr .create_time 5 2 }}
+  {{ $c := 0 }}
+  {{ with index $mvMonths $m }}{{ $c = . }}{{ end }}
+  {{ $mvMonths = merge $mvMonths (dict $m (add $c 1)) }}
+{{ end }}
+{{ $mvMonthPairs := slice }}
+{{ range $m, $c := $mvMonths }}
+  {{ $mvMonthPairs = $mvMonthPairs | append (dict "m" $m "c" $c) }}
+{{ end }}
+{{ $mvTopMonth := false }}
+{{ if gt (len $mvMonthPairs) 0 }}
+  {{ $mvTopMonth = index (sort $mvMonthPairs "c" "desc") 0 }}
+{{ end }}
+{{/* 盗墓笔记 IP 系列计数 */}}
+{{ $ipKeys := slice "盗墓笔记" "重启" "沙海" "藏海花" "终极笔记" "吴邪" }}
+{{ $ipCount := 0 }}
+{{ range $mv }}
+  {{ $t := .title | default "" }}
+  {{ range $ipKeys }}
+    {{ if findRE . $t }}
+      {{ $ipCount = add $ipCount 1 }}
+      {{ break }}
+    {{ end }}
+  {{ end }}
+{{ end }}
+{{ $goalKm := float (site.Params.services.exercise.goalKm | default 500) }}
 
 {{/* ===== 运动统计 ===== */}}
 {{ $runKm := 0.0 }}
@@ -141,6 +170,19 @@
     {{ if and (gt (len $mvTv) 0) (eq (len $mvMovie) 1) }}
     <p class="annual-line">几乎全是<b>剧</b>：{{ len $mvTv }} 部剧集对 {{ len $mvMovie }} 部电影。你是标准的追剧型观众。</p>
     {{ end }}
+    {{ with $mvTopMonth }}
+      {{ if eq .c (len $mv) }}
+    <p class="annual-line">而且全部集中在 <b>{{ printf "%d" (int (float .m)) }} 月</b>——这个月你才开启豆瓣标记，一口气狂补了 {{ .c }} 部，补课式追剧实锤。</p>
+      {{ else }}
+    <p class="annual-line">看得最疯的是 <b>{{ printf "%d" (int (float .m)) }} 月</b>，一口气标记了 {{ .c }} 部。</p>
+      {{ end }}
+    {{ end }}
+    {{ if gt $ipCount 0 }}
+    <p class="annual-line">今年还是一场<b>盗墓笔记马拉松</b>：《盗墓笔记》《终极笔记》《重启》两季《沙海》《藏海花》……同 IP 一口气 {{ $ipCount }} 部，吴邪都快认识你了。</p>
+    {{ end }}
+    {{ if and (gt (len $mvRated) 0) (gt (len $mvHigh) 0) }}
+    <p class="annual-line">打分口味偏慷慨：<b>{{ printf "%.0f" (mul 100 (div (float (len $mvHigh)) (float (len $mvRated)))) }}%</b> 的剧拿到四星以上——今年看的，都值得。</p>
+    {{ end }}
     {{ with $mvFirst }}
     <p class="annual-line">年初第一部是<b>《{{ .title }}》</b>{{ with $mvLast }}，最近一部是<b>《{{ .title }}》</b>。{{ end }}</p>
     {{ end }}
@@ -166,7 +208,10 @@
     {{ with $runLongest }}
     <p class="annual-line">单次最长的一次：<b>{{ printf "%.1f" (float .distance) }} 公里</b>（{{ substr (string .start_date_local) 0 10 }}）。</p>
     {{ end }}
-    <p class="annual-line">{{ printf "%.0f" $runKm }} 公里，够从家门口跑出去再跑回来，还要多绕几圈。</p>
+    <p class="annual-line">平均每次 <b>{{ printf "%.1f" (div $runKm (float (len $ar))) }}</b> 公里——标准三公里选手。按标准操场换算，这一年你绕了它 <b>{{ printf "%.0f" (div (mul $runKm 1000.0) 400.0) }}</b> 圈。</p>
+    {{ if gt $goalKm 0 }}
+    <p class="annual-line">年度 {{ printf "%.0f" $goalKm }} 公里目标完成 <b>{{ printf "%.0f" (mul 100 (div $runKm $goalKm)) }}%</b>{{ if lt $runKm $goalKm }}——剩下的 {{ printf "%.0f" (sub $goalKm $runKm) }} 公里，留给冲刺。{{ else }}——目标已达成，给自己鼓个掌。{{ end }}</p>
+    {{ end }}
   </section>
   {{ end }}
 
@@ -177,6 +222,10 @@
     <h2>{{ $songCount }} 首歌躺在歌单里</h2>
     <p class="annual-line">连起来能听 <b>{{ printf "%.1f" (div (float $songSecs) 3600.0) }}</b> 小时。听得最多的歌手：</p>
     {{ if gt (len $topSingers) 0 }}
+    {{ $top1 := index $topSingers 0 }}
+    {{ if and (gt $songCount 0) (gt $top1.count 0) }}
+    <p class="annual-line">第一名<b>{{ $top1.name }}</b>断层领先——歌单里每 <b>{{ printf "%.0f" (div (float $songCount) (float $top1.count)) }}</b> 首歌就有 1 首是他。</p>
+    {{ end }}
     <ol class="annual-list">
       {{ range first 3 $topSingers }}
       <li>{{ .name }} · {{ .count }} 首</li>
@@ -187,20 +236,31 @@
   </section>
   {{ end }}
 
-  {{/* ===== 游戏（现状快照） ===== */}}
+  {{/* ===== 游戏（快照差分增量榜） ===== */}}
+  {{/* Steam 不提供"今年玩了多久"，delta 数据由 snapshot_data.py 用最早快照 vs 当前差分生成。 */}}
   {{ if gt (len $games) 0 }}
   <section class="annual-block">
     <p class="annual-eyebrow">GAME · 屏幕</p>
-    <h2>{{ len $games }} 款游戏，{{ printf "%.0f" $gameHours }} 小时</h2>
-    {{ if gt (len $gameTop) 0 }}
-    <p class="annual-line">时间花得最多的是：</p>
-    <ol class="annual-list">
-      {{ range first 3 $gameTop }}
-      <li>{{ .name }} · {{ .hours }} 小时</li>
+    <h2>{{ len $games }} 款游戏，累计 {{ printf "%.0f" $gameHours }} 小时</h2>
+    {{ $delta := resources.Get "data/steam-delta.json" | transform.Unmarshal }}
+    {{ with $delta }}
+      {{ if gt (len .games) 0 }}
+      <p class="annual-line">自 <b>{{ .since }}</b> 快照开启以来，时长增长最多的是：</p>
+      <ol class="annual-list">
+        {{ range first 3 .games }}
+        <li>{{ .name }} · +{{ .hours_added }} 小时</li>
+        {{ end }}
+      </ol>
+      {{ if lt (len .games) 4 }}
+      <p class="annual-line">其余游戏这几周都在吃灰——库存吃灰，游戏人生。</p>
       {{ end }}
-    </ol>
+      {{ else }}
+      <p class="annual-line">快照开启以来还没有新增时长。月度快照每月 1 号存一份，明年年报这里就是真正的"今年玩得最多"榜。</p>
+      {{ end }}
+    {{ else }}
+      <p class="annual-line">月度快照刚开始积累（每月 1 号存一份）。明年年报，这里就是真正的"今年玩得最多"榜。</p>
     {{ end }}
-    <p class="annual-note-sm">截至本次构建的累计数据。</p>
+    <p class="annual-note-sm">"新增时长"基于月度快照差分（Steam 不提供按年拆分的时长）；上方累计数字为历史总量。</p>
   </section>
   {{ end }}
 
