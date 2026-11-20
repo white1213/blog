@@ -1,0 +1,19 @@
+{
+  "updated": "2026-11-21",
+  "months": [
+    {
+      "month": "2026-11",
+      "hours_total": 0.4,
+      "games": [
+        {
+          "name": "Cry of Fear",
+          "hours": 0.3
+        },
+        {
+          "name": "Resident Evil 5",
+          "hours": 0.1
+        }
+      ]
+    }
+  ]
+}

@@ -260,6 +260,23 @@
     {{ else }}
       <p class="annual-line">月度快照刚开始积累（每月 1 号存一份）。明年年报，这里就是真正的"今年玩得最多"榜。</p>
     {{ end }}
+    {{ with resources.Get "data/steam-monthly.json" | transform.Unmarshal }}
+      {{ if gt (len .months) 0 }}
+      <p class="annual-subhead">逐月游玩记录（快照差分）</p>
+      <ul class="annual-monthly">
+        {{ range .months }}
+        <li>
+          <div class="annual-monthly-head"><b>{{ .month }}</b><span>共 {{ .hours_total }} 小时</span></div>
+          <ul>
+            {{ range .games }}
+            <li>{{ .name }} · {{ .hours }} 小时</li>
+            {{ end }}
+          </ul>
+        </li>
+        {{ end }}
+      </ul>
+      {{ end }}
+    {{ end }}
     <p class="annual-note-sm">"新增时长"基于月度快照差分（Steam 不提供按年拆分的时长）；上方累计数字为历史总量。</p>
   </section>
   {{ end }}
@@ -366,6 +383,43 @@
 }
 @media (min-width: 480px) {
   .annual-bigrow { grid-template-columns: repeat(4, 1fr); }
+}
+.annual-subhead {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-content-color);
+  margin: 16px 0 8px;
+}
+.annual-monthly {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.annual-monthly > li {
+  margin: 8px 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(120, 110, 90, 0.06);
+}
+.annual-monthly-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.84rem;
+}
+.annual-monthly-head span {
+  font-size: 0.74rem;
+  color: var(--text-info-color);
+}
+.annual-monthly ul {
+  list-style: none;
+  padding: 4px 0 0 8px;
+  margin: 0;
+}
+.annual-monthly ul li {
+  font-size: 0.82rem;
+  color: var(--text-info-color);
+  padding: 2px 0;
 }
 </style>
 {{ end }}

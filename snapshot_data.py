@@ -94,7 +94,58 @@ def main():
         print("📦 已存快照 {} ({} 条)".format(dest.name, len(payload) if isinstance(payload, list) else "dict"))
     print("本月共写入 {} 份快照 ({})".format(written, month))
     update_delta()
+    update_monthly()
     return 0
+
+
+def update_monthly():
+    """生成 assets/data/steam-monthly.json：相邻快照差分得到的逐月游玩明细。
+
+    时间点序列 = 各月快照 + 当前数据；相邻两点的 minutes 差分即该月游玩时长。
+    最后一段（本月至今）会随每天 steam 同步自动刷新。
+    """
+    steam = ROOT / "assets" / "data" / "steam.json"
+    if not steam.exists():
+        return
+    try:
+        current = json.loads(steam.read_text(encoding="utf-8"))
+    except Exception:
+        return
+    snaps = sorted(SNAP_DIR.glob("steam-*.json"))
+    if not snaps:
+        return
+
+    points = []
+    for s in snaps:
+        try:
+            data = json.loads(s.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        label = s.stem.replace("steam-", "")
+        points.append((label, {int(g["appid"]): int(g.get("minutes") or 0) for g in data if g.get("appid")}))
+    points.append((datetime.now(TZ_CN).strftime("%Y-%m"),
+                   {int(g["appid"]): int(g.get("minutes") or 0) for g in current if g.get("appid")}))
+    name_of = {int(g["appid"]): g.get("name", "") for g in current}
+
+    months = []
+    for i in range(len(points) - 1):
+        label, cur_map = points[i + 1]
+        games = []
+        total = 0
+        for appid, minutes in cur_map.items():
+            d = minutes - points[i][1].get(appid, 0)
+            if d > 0:
+                games.append({"name": name_of.get(appid, str(appid)), "hours": round(d / 60, 1)})
+                total += d
+        if games:
+            games.sort(key=lambda x: -x["hours"])
+            months.append({"month": label, "hours_total": round(total / 60, 1), "games": games})
+    months.sort(key=lambda x: x["month"], reverse=True)
+
+    out = {"updated": datetime.now(TZ_CN).strftime("%Y-%m-%d"), "months": months}
+    dest = ROOT / "assets" / "data" / "steam-monthly.json"
+    dest.write_text(json.dumps(out, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print("📊 已更新 steam-monthly.json: {} 个月有游玩记录".format(len(months)))
 
 
 if __name__ == "__main__":
