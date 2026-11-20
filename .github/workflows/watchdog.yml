@@ -84,6 +84,7 @@ jobs:
           page_date=$(printf '%s' "$html" | grep -o '数据更新于 [0-9-]\{10\}' | grep -o '[0-9-]\{10\}' | head -1)
           today=$(TZ=Asia/Shanghai date +%F)
           cutoff=$(TZ=Asia/Shanghai date -d "2 days ago" +%F)
+          ok=false
 
           if [ -z "$html" ]; then
             verdict="HTTP_FAIL"
@@ -93,12 +94,13 @@ jobs:
             verdict="STALE ($page_date 早于 $cutoff，发布链路可能卡住)"
           else
             verdict="OK ($page_date)"
+            ok=true
           fi
           echo "网站探测结论: $verdict"
 
           issue_num=$(gh issue list -R "$REPO" --state open --search "网站探测报警 in:title" --json number --jq '.[0].number' 2>/dev/null || echo "")
 
-          if [ "$verdict" = "OK" ]; then
+          if $ok; then
             if [ -n "$issue_num" ]; then
               gh issue close "$issue_num" -R "$REPO" --comment "网站探测已恢复：$verdict，自动关闭。" || true
             fi
