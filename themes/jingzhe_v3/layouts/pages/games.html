@@ -22,9 +22,16 @@
   <div class="gm-stat"><b class="is-name" title="{{ $top.name }}">{{ $top.name }}</b><span>最常玩</span></div>
 </div>
 
-<div class="gm-grid">
+<div class="gm-sortbar" role="group" aria-label="排序方式">
+  <button class="gm-sort is-active" data-mode="total" type="button">总时长</button>
+  <button class="gm-sort" data-mode="recent" type="button">最近两周</button>
+  <span class="gm-sort-note" id="gm-sort-note" aria-live="polite"></span>
+</div>
+
+<div class="gm-grid" id="gm-grid">
   {{ range $games }}
-  <a class="gm-card" href="https://store.steampowered.com/app/{{ .appid }}/" target="_blank" rel="noopener" title="{{ .name }}">
+  <a class="gm-card{{ if not (.minutes_recent | default 0) }} is-idle{{ end }}" href="https://store.steampowered.com/app/{{ .appid }}/" target="_blank" rel="noopener" title="{{ .name }}"
+     data-total-minutes="{{ .minutes | default 0 }}" data-recent-minutes="{{ .minutes_recent | default 0 }}">
     <div class="gm-cover">
       {{ if .cover }}
       <img src="{{ .cover | relURL }}" alt="{{ .name }}" loading="lazy" decoding="async">
@@ -69,5 +76,64 @@
 .gm-hours { font-size: .76rem; color: var(--text-info-color); }
 .gm-bar { height: 3px; border-radius: 2px; background: rgba(120,110,90,.16); overflow: hidden; }
 .gm-bar i { display: block; height: 100%; border-radius: 2px; background: var(--text-highlight-color); }
+.gm-sortbar { display: flex; align-items: center; gap: 8px; margin: 0 0 16px; }
+.page-games .gm-sortbar {
+  --gm-width: min(1320px, calc(100vw - 40px));
+  width: var(--gm-width);
+  margin-left: calc((100% - var(--gm-width)) / 2);
+}
+.gm-sort {
+  appearance: none;
+  padding: 6px 14px;
+  font: inherit;
+  font-size: .8rem;
+  color: var(--text-info-color);
+  background: var(--background-card-color);
+  border: 1px solid rgba(120,110,90,.22);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color .2s ease, border-color .2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.gm-sort:hover { color: var(--text-content-color); border-color: rgba(120,110,90,.42); }
+.gm-sort.is-active { color: var(--text-highlight-color); border-color: var(--text-highlight-color); }
+.gm-sort-note { font-size: .76rem; color: var(--text-info-color); }
+.gm-grid.is-recent-mode .gm-card.is-idle { opacity: .38; }
+.gm-card { transition: opacity .25s ease; }
 </style>
+
+<script>
+(() => {
+  const grid = document.getElementById('gm-grid');
+  if (!grid) return;
+  const cards = Array.from(grid.querySelectorAll('.gm-card'));
+  const note = document.getElementById('gm-sort-note');
+  const fmt = m => {
+    const h = m / 60;
+    return h >= 10 ? Math.round(h) + ' 小时' : (Math.round(h * 10) / 10) + ' 小时';
+  };
+  const apply = (mode) => {
+    const key = mode === 'recent' ? 'recentMinutes' : 'totalMinutes';
+    cards.sort((a, b) => Number(b.dataset[key]) - Number(a.dataset[key]));
+    cards.forEach(c => grid.appendChild(c));
+    cards.forEach(c => {
+      const el = c.querySelector('.gm-hours');
+      const recent = Number(c.dataset.recentMinutes);
+      const total = Number(c.dataset.totalMinutes);
+      el.textContent = mode === 'recent'
+        ? (recent > 0 ? `两周 ${fmt(recent)}` : '两周未玩')
+        : `${total / 60 >= 10 ? Math.round(total / 60) : Math.round(total / 60 * 10) / 10} 小时`;
+    });
+    grid.classList.toggle('is-recent-mode', mode === 'recent');
+    const played = cards.filter(c => Number(c.dataset.recentMinutes) > 0).length;
+    if (note) note.textContent = mode === 'recent' ? `两周内玩了 ${played} 款` : '';
+  };
+  document.querySelectorAll('.gm-sort').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.gm-sort').forEach(b => b.classList.toggle('is-active', b === btn));
+      apply(btn.dataset.mode);
+    });
+  });
+})();
+</script>
 {{ end }}

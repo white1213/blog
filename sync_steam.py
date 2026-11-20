@@ -102,13 +102,16 @@ def main(cred_path):
 
     print("🕹️ 拉取最近游玩…")
     recent_ids = set()
+    recent_minutes = {}
     try:
         recent = get_json(
             API + "/IPlayerService/GetRecentlyPlayedGames/v1/?key={}&steamid={}&format=json".format(key, steam_id)
         )
         for g in recent.get("response", {}).get("games", []):
             if g.get("playtime_2weeks"):
-                recent_ids.add(int(g["appid"]))
+                appid = int(g["appid"])
+                recent_ids.add(appid)
+                recent_minutes[appid] = int(g.get("playtime_2weeks") or 0)
         print("  最近两周玩过 {} 款".format(len(recent_ids)))
     except Exception as exc:
         print("  ⚠️ 最近游玩拉取失败（不影响主流程）：{}".format(exc))
@@ -127,6 +130,7 @@ def main(cred_path):
             "name": g.get("name") or "App {}".format(appid),
             "minutes": minutes,
             "hours": round(minutes / 60, 1),
+            "minutes_recent": recent_minutes.get(appid, 0),
             "recent": appid in recent_ids,
             "cover": cover
         })

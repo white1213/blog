@@ -4,6 +4,7 @@
     "name": "Grand Theft Auto V Legacy",
     "minutes": 6566,
     "hours": 109.4,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/271590.jpg"
   },
@@ -12,6 +13,7 @@
     "name": "Grand Theft Auto V Enhanced",
     "minutes": 5817,
     "hours": 97.0,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/3240220.jpg"
   },
@@ -20,6 +22,7 @@
     "name": "The Witcher 3: Wild Hunt — Remastered",
     "minutes": 5799,
     "hours": 96.7,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/292030.jpg"
   },
@@ -28,6 +31,7 @@
     "name": "Resident Evil 4",
     "minutes": 5305,
     "hours": 88.4,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/2050650.jpg"
   },
@@ -36,6 +40,7 @@
     "name": "NARAKA: BLADEPOINT",
     "minutes": 5127,
     "hours": 85.5,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/1203220.jpg"
   },
@@ -44,6 +49,7 @@
     "name": "The Binding of Isaac: Rebirth",
     "minutes": 3925,
     "hours": 65.4,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/250900.jpg"
   },
@@ -52,6 +58,7 @@
     "name": "Left 4 Dead 2",
     "minutes": 1588,
     "hours": 26.5,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/550.jpg"
   },
@@ -60,6 +67,7 @@
     "name": "Wallpaper Engine",
     "minutes": 1480,
     "hours": 24.7,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/431960.jpg"
   },
@@ -68,6 +76,7 @@
     "name": "Dead Rising 3",
     "minutes": 1127,
     "hours": 18.8,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/265550.jpg"
   },
@@ -76,6 +85,7 @@
     "name": "White Day: A Labyrinth Named School",
     "minutes": 992,
     "hours": 16.5,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/466130.jpg"
   },
@@ -84,6 +94,7 @@
     "name": "Outlast 2",
     "minutes": 710,
     "hours": 11.8,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/414700.jpg"
   },
@@ -92,6 +103,7 @@
     "name": "Heavy Rain",
     "minutes": 669,
     "hours": 11.2,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/960910.jpg"
   },
@@ -100,6 +112,7 @@
     "name": "Sons Of The Forest",
     "minutes": 653,
     "hours": 10.9,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/1326470.jpg"
   },
@@ -108,6 +121,7 @@
     "name": "This War of Mine",
     "minutes": 649,
     "hours": 10.8,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/282070.jpg"
   },
@@ -116,6 +130,7 @@
     "name": "The Forest",
     "minutes": 611,
     "hours": 10.2,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/242760.jpg"
   },
@@ -124,6 +139,7 @@
     "name": "The Elder Scrolls V: Skyrim Special Edition",
     "minutes": 556,
     "hours": 9.3,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/489830.jpg"
   },
@@ -132,6 +148,7 @@
     "name": "Metro 2033 Redux",
     "minutes": 440,
     "hours": 7.3,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/286690.jpg"
   },
@@ -140,6 +157,7 @@
     "name": "Grand Theft Auto: Vice City - The Definitive Edition",
     "minutes": 400,
     "hours": 6.7,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/1546990.jpg"
   },
@@ -148,6 +166,7 @@
     "name": "Beyond: Two Souls",
     "minutes": 232,
     "hours": 3.9,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/960990.jpg"
   },
@@ -156,6 +175,7 @@
     "name": "Outlast",
     "minutes": 195,
     "hours": 3.2,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/238320.jpg"
   },
@@ -164,6 +184,7 @@
     "name": "Don't Starve Together",
     "minutes": 193,
     "hours": 3.2,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/322330.jpg"
   },
@@ -172,6 +193,7 @@
     "name": "Dead Rising 4",
     "minutes": 123,
     "hours": 2.0,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/543460.jpg"
   },
@@ -180,6 +202,7 @@
     "name": "Metro Exodus",
     "minutes": 104,
     "hours": 1.7,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/412020.jpg"
   },
@@ -188,6 +211,7 @@
     "name": "Goose Goose Duck",
     "minutes": 86,
     "hours": 1.4,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/1568590.jpg"
   },
@@ -196,6 +220,7 @@
     "name": "Resident Evil 5",
     "minutes": 83,
     "hours": 1.4,
+    "minutes_recent": 5,
     "recent": true,
     "cover": "steam-covers/21690.jpg"
   },
@@ -204,6 +229,7 @@
     "name": "Paper Dolls Original",
     "minutes": 69,
     "hours": 1.1,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/1051310.jpg"
   },
@@ -212,6 +238,7 @@
     "name": "The Beast Inside",
     "minutes": 65,
     "hours": 1.1,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/792300.jpg"
   },
@@ -220,6 +247,7 @@
     "name": "Yet Another Zombie Defense HD",
     "minutes": 56,
     "hours": 0.9,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/674750.jpg"
   },
@@ -228,6 +256,7 @@
     "name": "Project Zomboid",
     "minutes": 45,
     "hours": 0.8,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/108600.jpg"
   },
@@ -236,6 +265,7 @@
     "name": "Mafia: Definitive Edition",
     "minutes": 45,
     "hours": 0.8,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/1030840.jpg"
   },
@@ -244,6 +274,7 @@
     "name": "Borderlands 3",
     "minutes": 43,
     "hours": 0.7,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/397540.jpg"
   },
@@ -252,6 +283,7 @@
     "name": "Cry of Fear",
     "minutes": 42,
     "hours": 0.7,
+    "minutes_recent": 20,
     "recent": true,
     "cover": "steam-covers/223710.jpg"
   },
@@ -260,6 +292,7 @@
     "name": "Mafia",
     "minutes": 29,
     "hours": 0.5,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/40990.jpg"
   },
@@ -268,6 +301,7 @@
     "name": "Little Nightmares II",
     "minutes": 25,
     "hours": 0.4,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/860510.jpg"
   },
@@ -276,6 +310,7 @@
     "name": "Guts and Glory",
     "minutes": 22,
     "hours": 0.4,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/537340.jpg"
   },
@@ -284,6 +319,7 @@
     "name": "POSTAL 2",
     "minutes": 15,
     "hours": 0.2,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/223470.jpg"
   },
@@ -292,6 +328,7 @@
     "name": "The Walking Dead: The Telltale Definitive Series",
     "minutes": 13,
     "hours": 0.2,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/1449690.jpg"
   },
@@ -300,6 +337,7 @@
     "name": "112 Operator",
     "minutes": 9,
     "hours": 0.1,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/793460.jpg"
   },
@@ -308,6 +346,7 @@
     "name": "Biped",
     "minutes": 3,
     "hours": 0.1,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/1071870.jpg"
   },
@@ -316,6 +355,7 @@
     "name": "Pony Island",
     "minutes": 1,
     "hours": 0.0,
+    "minutes_recent": 0,
     "recent": false,
     "cover": "steam-covers/405640.jpg"
   }
