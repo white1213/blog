@@ -4,10 +4,26 @@
     "name": "本人用",
     "cover": "playlist-covers/9061797457.jpg",
     "desc": "",
-    "creator": "归心.",
-    "song_count": 526,
+    "creator": "就是爱音乐",
+    "song_count": 528,
     "source_url": "https://y.qq.com/n/ryqq/playlist/9061797457",
     "songs": [
+      {
+        "name": "팔레트 (Feat. G-DRAGON) (Palette)",
+        "singers": "IU (아이유) / G-DRAGON (权志龙)",
+        "album": "Palette",
+        "interval": 217,
+        "songmid": "00339dBZ0aQfF9",
+        "cover": "https://y.gtimg.cn/music/photo_new/T002R300x300M000000LvHvQ1YfXIt.jpg"
+      },
+      {
+        "name": "よかった。 (真好。)",
+        "singers": "當山みれい (当山真玲)",
+        "album": "still",
+        "interval": 262,
+        "songmid": "000JreoS0T3XqX",
+        "cover": "https://y.gtimg.cn/music/photo_new/T002R300x300M000002M3rBZ4apVq1.jpg"
+      },
       {
         "name": "陪你看星星",
         "singers": "陈子晴",
@@ -4223,7 +4239,7 @@
     "name": "学习专注｜帮你提升专注力！",
     "cover": "playlist-covers/9805640840.jpg",
     "desc": "一份安静能帮你集中注意力的歌单，希望能给正在学习工作的你提供一点帮助！",
-    "creator": "归心.",
+    "creator": "就是爱音乐",
     "song_count": 20,
     "source_url": "https://y.qq.com/n/ryqq/playlist/9805640840",
     "songs": [
