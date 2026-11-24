@@ -63,6 +63,12 @@ jobs:
           fi
           input_blob="$(git rev-parse HEAD:data/exercise/activities.json)"
           git commit -m "chore: process exercise activities"
+          # 兜底：提交后若仍有任何未纳入的文件，补进同一个提交，
+          # 否则 git rebase 会被 "You have unstaged changes" 阻塞。
+          if [ -n "$(git status --porcelain)" ]; then
+            git add -A
+            git commit --amend --no-edit
+          fi
           for attempt in 1 2 3; do
             git fetch origin main
             remote_blob="$(git rev-parse origin/main:data/exercise/activities.json)"

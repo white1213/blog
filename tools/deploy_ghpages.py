@@ -60,8 +60,40 @@ def blob_sha(data):
     return hashlib.sha1(b"blob %d\x00" % len(data) + data).hexdigest()
 
 
+def sync_data_from_remote():
+    """用远端 main 的数据文件覆盖本地，再做构建。
+
+    本地仓库经常落后（git 走代理不通时只能靠 API），
+    若直接用本地旧数据构建，会把线上数据回滚——2026-11-10 实际发生过。
+    这里只同步数据/封面（不碰模板代码），保证部署内容的数据是最新的。
+    """
+    refs = req("/git/refs/heads/main")
+    ref = refs[0] if isinstance(refs, list) else refs
+    head = req("/git/commits/" + ref["object"]["sha"])
+    tree = req("/git/trees/" + head["tree"]["sha"] + "?recursive=1")
+
+    synced = 0
+    for node in tree.get("tree", []):
+        if node["type"] != "blob":
+            continue
+        path = node["path"]
+        is_data = path.startswith("assets/data/")
+        is_new_cover = path.startswith("static/") and path.endswith((".jpg", ".png", ".webp"))
+        if not is_data and not (is_new_cover and not (ROOT / path).exists()):
+            continue
+        target = ROOT / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        b = req("/git/blobs/" + node["sha"])
+        target.write_bytes(base64.b64decode(b["content"]))
+        synced += 1
+    print("已从远端同步 {} 个数据/封面文件".format(synced))
+
+
 def main():
-    print("== 1/3 hugo 构建 ==")
+    print("== 1/4 同步远端数据 ==")
+    sync_data_from_remote()
+
+    print("== 2/4 hugo 构建 ==")
     subprocess.run([HUGO, "--minify", "--gc"], cwd=str(ROOT), check=True, capture_output=True, timeout=180)
     if not PUBLIC.exists():
         raise SystemExit("public/ 不存在,构建失败")
@@ -73,7 +105,7 @@ def main():
             files.append((full.relative_to(PUBLIC).as_posix(), full))
     print("产物文件:", len(files))
 
-    print("== 2/3 推送 gh-pages(增量) ==")
+    print("== 3/4 推送 gh-pages(增量) ==")
     grefs = req("/git/refs/heads/gh-pages")
     gobj = grefs[0] if isinstance(grefs, list) else grefs
     gp_commit = req("/git/commits/" + gobj["object"]["sha"])
@@ -100,7 +132,7 @@ def main():
     req("/git/refs/heads/gh-pages", {"sha": commit["sha"], "force": True}, "PATCH")
     print("✅ gh-pages:", commit["sha"][:7])
 
-    print("== 3/3 触发 Pages 构建 ==")
+    print("== 4/4 触发 Pages 构建 ==")
     b = req("/pages/builds", None, "POST")
     print("Pages 构建:", b.get("status"))
     print("🎉 完成,约 1-2 分钟后线上生效(CDN 缓存约 10 分钟)")

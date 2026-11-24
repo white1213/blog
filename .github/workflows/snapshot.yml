@@ -1,12 +1,13 @@
 name: Monthly Snapshot
 
-# 每月 1 号存一份 Steam/歌单数据快照到 assets/data/snapshots/，
+# 每月 1 号（北京时间凌晨）存一份 Steam/歌单数据快照到 assets/data/snapshots/，
 # 为年度报告积累时间维度（steam.json 和 playlists.json 没有逐条时间戳）。
-# 只提交数据，不触发部署（快照不参与页面渲染）。
+# 快照文件按"当月"命名；逐月游玩时长 = 相邻快照差分，由 snapshot_data.py 汇总进 steam-monthly.json。
+# 只提交数据，不触发部署（快照不参与页面直接渲染，但 delta/monthly 会参与年报）。
 
 on:
   schedule:
-    # UTC 19:30（月末最后一天）= 北京时间 1 号 03:30
+    # UTC 19:30 每天 1 号 = 北京时间 2 号 03:30（避开整点高峰；每月 1 日量级足够）
     - cron: '30 19 1 * *'
   workflow_dispatch:
 
@@ -37,12 +38,18 @@ jobs:
         run: |
           git config user.name "white1213-bot"
           git config user.email "1665491507a@gmail.com"
-          git add assets/data/snapshots
+          git add -A assets/data
           if git diff --staged --quiet; then
             echo "No snapshot changes."
             exit 0
           fi
           git commit -m "chore: monthly data snapshot"
+          # 兜底：提交后若仍有任何未纳入的文件，补进同一个提交，
+          # 否则 git rebase 会被 "You have unstaged changes" 阻塞。
+          if [ -n "$(git status --porcelain)" ]; then
+            git add -A
+            git commit --amend --no-edit
+          fi
           for attempt in 1 2 3; do
             git fetch origin main
             if git rebase origin/main && git push origin HEAD:main; then

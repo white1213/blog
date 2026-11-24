@@ -129,17 +129,39 @@ def update_monthly():
 
     months = []
     for i in range(len(points) - 1):
-        label, cur_map = points[i + 1]
-        games = []
+        # 区间归属：两个快照之间的增量属于"较早那个月"的游玩
+        # （11-01 → 12-01 的差 = 11 月的游玩）；最后一段（最新快照 → 当前）归当前月。
+        is_last = i == len(points) - 2
+        label = points[i + 1][0] if is_last else points[i][0]
+        cur_map = points[i + 1][1]
+        games = {}
         total = 0
         for appid, minutes in cur_map.items():
             d = minutes - points[i][1].get(appid, 0)
             if d > 0:
-                games.append({"name": name_of.get(appid, str(appid)), "hours": round(d / 60, 1)})
+                name = name_of.get(appid, str(appid))
+                games[name] = games.get(name, 0) + d
                 total += d
         if games:
-            games.sort(key=lambda x: -x["hours"])
-            months.append({"month": label, "hours_total": round(total / 60, 1), "games": games})
+            merged = next((m for m in months if m["month"] == label), None)
+            if merged:
+                merged["hours_total"] = round(merged["hours_total"] + total / 60, 1)
+                by_name = {g["name"]: g for g in merged["games"]}
+                for name, minutes in games.items():
+                    if name in by_name:
+                        by_name[name]["hours"] = round(by_name[name]["hours"] + minutes / 60, 1)
+                    else:
+                        merged["games"].append({"name": name, "hours": round(minutes / 60, 1)})
+                merged["games"].sort(key=lambda x: -x["hours"])
+            else:
+                months.append({
+                    "month": label,
+                    "hours_total": round(total / 60, 1),
+                    "games": sorted(
+                        ({"name": n, "hours": round(m / 60, 1)} for n, m in games.items()),
+                        key=lambda x: -x["hours"],
+                    ),
+                })
     months.sort(key=lambda x: x["month"], reverse=True)
 
     out = {"updated": datetime.now(TZ_CN).strftime("%Y-%m-%d"), "months": months}
