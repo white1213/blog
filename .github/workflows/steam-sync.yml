@@ -54,7 +54,7 @@ jobs:
       - name: Commit changes
         id: commit
         run: |
-          git add assets/data/steam.json assets/data/steam-delta.json assets/data/snapshots assets/data/sync-status/steam.json static/steam-covers
+          git add -A assets/data static/steam-covers
           if git diff --staged --quiet; then
             echo "No steam changes."
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -66,6 +66,12 @@ jobs:
             git commit -m "chore: sync steam library"
           else
             git commit -m "chore: steam check-in (no data changes)"
+          fi
+          # 兜底：提交后若仍有任何未纳入的文件，补进同一个提交。
+          # 否则 git rebase 会被 "You have unstaged changes" 阻塞（2026-11 已踩两次）。
+          if [ -n "$(git status --porcelain)" ]; then
+            git add -A
+            git commit --amend --no-edit
           fi
           for attempt in 1 2 3; do
             git fetch origin main
