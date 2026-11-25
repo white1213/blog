@@ -220,8 +220,8 @@
     "name": "Resident Evil 5",
     "minutes": 83,
     "hours": 1.4,
-    "minutes_recent": 5,
-    "recent": true,
+    "minutes_recent": 0,
+    "recent": false,
     "cover": "steam-covers/21690.jpg"
   },
   {
