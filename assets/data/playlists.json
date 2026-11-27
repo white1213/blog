@@ -5,9 +5,17 @@
     "cover": "playlist-covers/9061797457.jpg",
     "desc": "",
     "creator": "归心.",
-    "song_count": 531,
+    "song_count": 532,
     "source_url": "https://y.qq.com/n/ryqq/playlist/9061797457",
     "songs": [
+      {
+        "name": "慢慢懂",
+        "singers": "汪苏泷",
+        "album": "慢慢懂",
+        "interval": 266,
+        "songmid": "0030zMCo0vTYed",
+        "cover": "https://y.gtimg.cn/music/photo_new/T002R300x300M000003cnv3z1IHcYt.jpg"
+      },
       {
         "name": "이런 엔딩 (这样的Ending)",
         "singers": "IU (아이유)",
